@@ -1,0 +1,704 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>UdyamVerse | AI-Powered Startup Intelligence Platform</title>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+  
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
+  
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: #05050f; font-family: 'Space Grotesk', sans-serif; overflow-x: hidden; color: #eef5ff; }
+    .bg-orb { position: fixed; width: 100vw; height: 100vh; top: 0; left: 0; z-index: -2; background: radial-gradient(circle at 20% 30%, #0a0a2a, #010105); }
+    .bg-orb::before { content: ""; position: absolute; width: 100%; height: 100%; background: radial-gradient(circle at 70% 60%, rgba(0, 255, 255, 0.08), transparent 60%); animation: pulseGlow 12s infinite alternate; }
+    @keyframes pulseGlow { 0% { opacity: 0.3; transform: scale(1);} 100% { opacity: 0.8; transform: scale(1.2);} }
+    canvas#particleCanvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; pointer-events: none; }
+    .dashboard { max-width: 1600px; margin: 0 auto; padding: 1.5rem 2rem 3rem; position: relative; z-index: 2; }
+    .nav-bar { 
+      display: flex; 
+      flex-wrap: wrap; 
+      justify-content: space-between; 
+      align-items: center; 
+      margin-bottom: 2.5rem; 
+      padding: 1rem 2rem; 
+      background: rgba(10, 20, 30, 0.55); 
+      backdrop-filter: blur(14px); 
+      border-radius: 70px; 
+      border: 1px solid rgba(0, 255, 255, 0.25); 
+      box-shadow: 0 20px 40px rgba(0,0,0,0.4), 0 0 20px rgba(0,255,255,0.1);
+      position: relative;
+      z-index: 100;
+    }
+    .logo { font-size: 1.6rem; font-weight: 700; background: linear-gradient(135deg, #aaffff, #4d8eff); -webkit-background-clip: text; background-clip: text; color: transparent; cursor: pointer; }
+    .logo i { background: none; color: #4dccff; margin-right: 8px; }
+    .nav-links { 
+      display: flex; 
+      gap: 0.8rem; 
+      flex-wrap: wrap; 
+      align-items: center;
+    }
+    .nav-item { 
+      background: rgba(20, 30, 45, 0.6); 
+      backdrop-filter: blur(8px); 
+      padding: 0.6rem 1.5rem; 
+      border-radius: 40px; 
+      font-weight: 500; 
+      cursor: pointer; 
+      transition: all 0.3s; 
+      border: 1px solid rgba(80, 180, 255, 0.2);
+      white-space: nowrap;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: #eef5ff;
+    }
+    .nav-item i { margin-right: 6px; }
+    .nav-item:hover, .nav-item.active { 
+      background: linear-gradient(95deg, #0f2b3d, #0a1a2c); 
+      border-color: #3effea; 
+      box-shadow: 0 0 14px rgba(62, 255, 234, 0.4); 
+      transform: translateY(-3px); 
+    }
+    
+    /* Profile Dropdown Styles */
+    .profile-dropdown {
+      position: relative;
+      display: inline-block;
+      margin-left: 0.5rem;
+    }
+    .profile-btn {
+      background: linear-gradient(135deg, rgba(0, 201, 255, 0.2), rgba(94, 42, 255, 0.2));
+      backdrop-filter: blur(8px);
+      padding: 0.6rem 1.2rem;
+      border-radius: 40px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.3s;
+      border: 1px solid rgba(80, 180, 255, 0.3);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      white-space: nowrap;
+    }
+    .profile-btn:hover {
+      background: linear-gradient(95deg, #0f2b3d, #0a1a2c);
+      border-color: #3effea;
+      box-shadow: 0 0 14px rgba(62, 255, 234, 0.4);
+      transform: translateY(-3px);
+    }
+    .profile-btn i:first-child {
+      font-size: 1.1rem;
+    }
+    .dropdown-menu {
+      position: absolute;
+      top: calc(100% + 10px);
+      right: 0;
+      background: rgba(10, 20, 30, 0.98);
+      backdrop-filter: blur(16px);
+      border-radius: 20px;
+      border: 1px solid rgba(0, 255, 255, 0.3);
+      min-width: 260px;
+      overflow: hidden;
+      z-index: 1000;
+      opacity: 0;
+      visibility: hidden;
+      transform: translateY(-10px);
+      transition: all 0.3s ease;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+    }
+    .profile-dropdown.active .dropdown-menu {
+      opacity: 1;
+      visibility: visible;
+      transform: translateY(0);
+    }
+    .dropdown-header {
+      padding: 1rem;
+      border-bottom: 1px solid rgba(0, 255, 255, 0.2);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .dropdown-header img {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      object-fit: cover;
+    }
+    .dropdown-header-info h4 {
+      font-size: 0.9rem;
+      margin-bottom: 2px;
+    }
+    .dropdown-header-info p {
+      font-size: 0.7rem;
+      opacity: 0.7;
+    }
+    .dropdown-item {
+      padding: 0.75rem 1rem;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      cursor: pointer;
+      transition: all 0.2s;
+      border-left: 3px solid transparent;
+    }
+    .dropdown-item:hover {
+      background: rgba(0, 201, 255, 0.1);
+      border-left-color: #00c9ff;
+    }
+    .dropdown-item i {
+      width: 20px;
+      color: #00c9ff;
+    }
+    .dropdown-divider {
+      height: 1px;
+      background: rgba(0, 255, 255, 0.2);
+      margin: 0.5rem 0;
+    }
+    .dropdown-footer {
+      padding: 0.75rem 1rem;
+      border-top: 1px solid rgba(0, 255, 255, 0.2);
+      font-size: 0.7rem;
+      text-align: center;
+      opacity: 0.7;
+    }
+    
+    /* Modal for Profile Edit */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.85);
+      backdrop-filter: blur(8px);
+      z-index: 10000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .modal-content {
+      width: 90%;
+      max-width: 500px;
+      background: rgba(10, 20, 30, 0.95);
+      border-radius: 2rem;
+      border: 1px solid rgba(0, 255, 255, 0.3);
+      overflow: hidden;
+    }
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem 1.5rem;
+      background: linear-gradient(135deg, rgba(0, 100, 255, 0.3), rgba(0, 0, 0, 0.5));
+      border-bottom: 1px solid rgba(0, 255, 255, 0.2);
+    }
+    .close-modal {
+      background: rgba(255, 68, 68, 0.8);
+      border: none;
+      color: white;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      cursor: pointer;
+      font-size: 1.2rem;
+      transition: all 0.3s;
+    }
+    .close-modal:hover { background: #ff4444; transform: scale(1.1); }
+    .modal-body { padding: 1.5rem; }
+    .modal-body input {
+      width: 100%;
+      padding: 0.8rem;
+      margin-bottom: 1rem;
+      background: rgba(0, 0, 0, 0.6);
+      border: 1px solid rgba(0, 255, 255, 0.3);
+      border-radius: 10px;
+      color: white;
+      font-family: inherit;
+    }
+    .modal-body input:focus {
+      outline: none;
+      border-color: #00c9ff;
+    }
+    
+    /* Rest of the styles remain the same */
+    .hero-card { background: rgba(8, 18, 28, 0.65); backdrop-filter: blur(16px); border-radius: 2.5rem; padding: 2rem; margin-bottom: 2.5rem; border: 1px solid rgba(0, 230, 230, 0.4); box-shadow: 0 25px 45px -12px black; }
+    .glow-text { font-size: 3rem; font-weight: 700; background: linear-gradient(125deg, #FFFFFF, #7df9ff, #3a86ff); -webkit-background-clip: text; background-clip: text; color: transparent; margin-bottom: 1rem; }
+    .glow-text-small { font-size: 2rem; font-weight: 700; background: linear-gradient(125deg, #FFFFFF, #7df9ff, #3a86ff); -webkit-background-clip: text; background-clip: text; color: transparent; margin-bottom: 1rem; }
+    .gen-btn { background: linear-gradient(95deg, #00c9ff, #5e2aff); border: none; padding: 0.8rem 2rem; border-radius: 60px; font-weight: bold; color: white; cursor: pointer; transition: 0.2s; font-family: inherit; }
+    .gen-btn-outline { background: transparent; border: 1px solid #00c9ff; padding: 0.8rem 2rem; border-radius: 60px; font-weight: bold; color: #00c9ff; cursor: pointer; transition: 0.2s; font-family: inherit; }
+    .gen-btn-outline:hover { background: rgba(0, 201, 255, 0.1); transform: scale(1.02); box-shadow: 0 0 20px rgba(0,221,255,0.3); }
+    .gen-btn:hover { transform: scale(1.02); box-shadow: 0 0 20px #00ddff; }
+    .grid-2col { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1.8rem; margin-bottom: 2rem; }
+    .grid-3col { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.8rem; margin-bottom: 2rem; }
+    .grid-4col { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.8rem; margin-bottom: 2rem; }
+    .card { background: rgba(12, 22, 35, 0.65); backdrop-filter: blur(12px); border-radius: 1.8rem; padding: 1.8rem; border: 1px solid rgba(0, 255, 255, 0.2); transition: all 0.35s ease; }
+    .card:hover { transform: translateY(-8px); border-color: cyan; box-shadow: 0 20px 35px -15px rgba(0,255,255,0.2); }
+    .card h3 { font-size: 1.3rem; margin-bottom: 1rem; display: flex; align-items: center; gap: 10px; color: #7df9ff; }
+    .stat-number-large { font-size: 2.5rem; font-weight: 800; background: linear-gradient(135deg, #fff, #00ffff); -webkit-background-clip: text; background-clip: text; color: transparent; }
+    @media (max-width: 1200px) { .grid-4col { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 1000px) { 
+      .grid-2col, .grid-3col, .grid-4col { grid-template-columns: 1fr; } 
+      .dashboard { padding: 1rem; } 
+      .glow-text { font-size: 2rem; } 
+      .glow-text-small { font-size: 1.5rem; }
+      .nav-bar { flex-direction: column; gap: 1rem; }
+      .nav-links { justify-content: center; }
+    }
+    footer { text-align: center; margin-top: 3rem; opacity: 0.6; font-size: 0.8rem; }
+    .pulse-dot { width: 10px; height: 10px; background: #ff3366; border-radius: 50%; display: inline-block; margin-left: 6px; animation: pulseRed 1.4s infinite; }
+    @keyframes pulseRed { 0% { box-shadow: 0 0 0 0 rgba(255,51,102,0.7);} 100% { box-shadow: 0 0 0 8px rgba(255,51,102,0);} }
+    
+    .chat-bubble { position: fixed; bottom: 2rem; right: 2rem; z-index: 1000; cursor: pointer; animation: bounce 2s infinite; transition: transform 0.3s ease; }
+    .chat-bubble:hover { transform: scale(1.1); animation: none; }
+    .chat-icon { width: 60px; height: 60px; background: linear-gradient(135deg, #ff6b6b, #ff8e53); border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 15px rgba(255, 107, 107, 0.4); transition: all 0.3s ease; }
+    .chat-icon i { font-size: 28px; color: white; }
+    @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-15px); } }
+    .chat-bubble::after { content: ''; position: absolute; width: 100%; height: 100%; border-radius: 50%; background: radial-gradient(circle, rgba(255,107,107,0.4), transparent); animation: pulse 1.5s infinite; z-index: -1; }
+    @keyframes pulse { 0% { transform: scale(1); opacity: 0.6; } 100% { transform: scale(1.3); opacity: 0; } }
+    
+    .feature-icon { font-size: 2.5rem; color: #00c9ff; margin-bottom: 1rem; }
+    .testimonial-text { font-style: italic; color: #cbd5e6; line-height: 1.6; }
+    .pill { background: rgba(0, 201, 255, 0.15); padding: 0.3rem 1rem; border-radius: 40px; font-size: 0.8rem; display: inline-block; }
+    hr { border-color: rgba(0, 255, 255, 0.2); margin: 1rem 0; }
+  </style>
+</head>
+<body>
+<div class="bg-orb"></div>
+<canvas id="particleCanvas"></canvas>
+
+<div class="dashboard">
+  <div class="nav-bar">
+    <div class="logo" onclick="window.location.href='homepage.html'"><i class="fas fa-brain"></i> Udyam<span style="color:#7df9ff">Verse</span><span style="font-size:0.8rem;">.AI</span></div>
+    <div class="nav-links" id="navLinks">
+      <a href="homepage.html" class="nav-item active" data-tab="home"><i class="fas fa-home"></i> Homepage</a>
+      <a href="planner.html" class="nav-item" data-tab="planner"><i class="fas fa-calendar-alt"></i> Planner</a>
+      <a href="post.html" class="nav-item" data-tab="post"><i class="fas fa-pen-fancy"></i> Post</a>
+      <button class="gen-btn" id="stimulateBtn"><i class="fas fa-chart-line"></i> Launch Stimulator</button>      
+      <!-- Profile Dropdown Menu -->
+      <div class="profile-dropdown" id="profileDropdown">
+        <div class="profile-btn" id="profileBtn">
+          <i class="fas fa-user-circle"></i>
+          <span id="userNameDisplay">Loading...</span>
+          <i class="fas fa-chevron-down" style="font-size: 0.7rem;"></i>
+        </div>
+        <div class="dropdown-menu">
+          <div class="dropdown-header">
+            <img id="userAvatar" src="https://ui-avatars.com/api/?background=00c9ff&color=fff&name=User" alt="Avatar">
+            <div class="dropdown-header-info">
+              <h4 id="dropdownUserName">User</h4>
+              <p id="dropdownUserEmail">udyamverse@gmail.com</p>
+            </div>
+          </div>
+          <div class="dropdown-item" onclick="viewProfile()">
+            <i class="fas fa-user"></i>
+            <span>My Profile</span>
+          </div>
+          <div class="dropdown-item" onclick="editProfile()">
+            <i class="fas fa-edit"></i>
+            <span>Edit Profile</span>
+          </div>
+          <div class="dropdown-item" onclick="showSettings()">
+            <i class="fas fa-cog"></i>
+            <span>Settings</span>
+          </div>
+          <div class="dropdown-item" onclick="showNotifications()">
+            <i class="fas fa-bell"></i>
+            <span>Notifications</span>
+            <span style="margin-left: auto; background: #ff3366; padding: 2px 8px; border-radius: 20px; font-size: 0.7rem;" id="dropdownNotifBadge">0</span>
+          </div>
+          <div class="dropdown-item" onclick="showHelp()">
+            <i class="fas fa-question-circle"></i>
+            <span>Help & Support</span>
+          </div>
+          <div class="dropdown-divider"></div>
+          <div class="dropdown-item" onclick="signOut()">
+            <i class="fas fa-sign-out-alt"></i>
+            <span>Sign Out</span>
+          </div>
+          <div class="dropdown-footer">
+            <i class="fas fa-crown"></i> Premium Member
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- HOMEPAGE CONTENT -->
+  <div id="homeContent">
+    <div class="hero-card" style="text-align: center;">
+      <div class="glow-text">Intelligence for Visionary Founders</div>
+      <p style="font-size: 1.2rem; max-width: 800px; margin: 0 auto; color: #a0b3d9;">Empowering startup founders with AI-driven insights, market intelligence, and strategic guidance to build the next generation of breakthrough companies.</p>
+      <div style="display: flex; gap: 1rem; justify-content: center; margin-top: 2rem; flex-wrap: wrap;">
+        <button class="gen-btn" onclick="window.location.href='planner.html'"><i class="fas fa-rocket"></i> Start Your Journey</button>
+        <button class="gen-btn-outline" onclick="openStimulatorPage()"><i class="fas fa-chart-line"></i> Explore Market Simulator</button>
+      </div>
+    </div>
+
+    
+
+    <div class="hero-card">
+      <div class="glow-text-small">What UdyamVerse Offers</div>
+      <p style="margin-bottom: 2rem;">A comprehensive intelligence platform designed specifically for early-stage founders</p>
+      <div class="grid-3col">
+        <div class="card">
+          <i class="fas fa-chart-simple feature-icon"></i>
+          <h3>Market Intelligence</h3>
+          <p style="color: #a0b3d9;">Real-time analysis of market trends, competitor movements, and emerging opportunities in your industry sector.</p>
+          <hr>
+          <span class="pill">Updated Daily</span>
+        </div>
+        <div class="card">
+          <i class="fas fa-rocket feature-icon"></i>
+          <h3>Startup Planning</h3>
+          <p style="color: #a0b3d9;">AI-powered roadmap generation from idea to launch with actionable milestones, KPIs, and resource allocation strategies.</p>
+          <hr>
+          <span class="pill">12+ Categories</span>
+        </div>
+        <div class="card">
+          <i class="fas fa-chart-line feature-icon"></i>
+          <h3>Success Prediction</h3>
+          <p style="color: #a0b3d9;">Advanced ML models analyze your startup's potential across 40+ success factors with actionable improvement recommendations.</p>
+          <hr>
+          <span class="pill">94% Accuracy</span>
+        </div>
+        <div class="card">
+          <i class="fas fa-handshake feature-icon"></i>
+          <h3>Investor Matching</h3>
+          <p style="color: #a0b3d9;">Intelligent matching with VCs, angels, and funds aligned with your industry, stage, and funding requirements.</p>
+          <hr>
+          <span class="pill">250+ Investors</span>
+        </div>
+        <div class="card">
+          <i class="fas fa-file-alt feature-icon"></i>
+          <h3>NLP Pitch Analysis</h3>
+          <p style="color: #a0b3d9;">Natural language processing evaluates your pitch deck and executive summary against successful funded startups.</p>
+          <hr>
+          <span class="pill">Instant Feedback</span>
+        </div>
+        <div class="card">
+          <i class="fas fa-chart-pie feature-icon"></i>
+          <h3>Competitor Radar</h3>
+          <p style="color: #a0b3d9;">Automated tracking of competitor funding, product launches, hiring patterns, and market positioning.</p>
+          <hr>
+          <span class="pill">AI Monitoring</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="hero-card">
+      <div class="glow-text-small">How It Works</div>
+      <p style="margin-bottom: 2rem;">Three simple steps to transform your startup journey</p>
+      <div class="grid-3col">
+        <div class="card" style="text-align: center;">
+          <div style="width: 50px; height: 50px; background: linear-gradient(135deg, #00c9ff, #5e2aff); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem auto;">
+            <span style="font-size: 1.5rem; font-weight: bold;">1</span>
+          </div>
+          <h3>Share Your Idea</h3>
+          <p style="color: #a0b3d9;">Input your startup concept or business model into our AI engine for initial analysis.</p>
+        </div>
+        <div class="card" style="text-align: center;">
+          <div style="width: 50px; height: 50px; background: linear-gradient(135deg, #00c9ff, #5e2aff); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem auto;">
+            <span style="font-size: 1.5rem; font-weight: bold;">2</span>
+          </div>
+          <h3>Get AI Insights</h3>
+          <p style="color: #a0b3d9;">Receive comprehensive analysis including success probability, market fit, and strategic recommendations.</p>
+        </div>
+        <div class="card" style="text-align: center;">
+          <div style="width: 50px; height: 50px; background: linear-gradient(135deg, #00c9ff, #5e2aff); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem auto;">
+            <span style="font-size: 1.5rem; font-weight: bold;">3</span>
+          </div>
+          <h3>Build & Scale</h3>
+          <p style="color: #a0b3d9;">Execute your AI-generated roadmap with continuous guidance and real-time market updates.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>⚡ AI Venture Capital Intelligence · Empowering Founders Worldwide · Real-time Market Intelligence</footer>
+</div>
+
+<!-- Bouncing Chat Button -->
+<div class="chat-bubble" onclick="openChat()">
+    <div class="chat-icon">
+        <i class="fas fa-comment-dots"></i>
+    </div>
+</div>
+
+<script>
+    // ========================
+    // Firebase Configuration
+    // ========================
+    const firebaseConfig = {
+        apiKey: "AIzaSyD0ekRSOYjLFLnsIBanetGCUzKAonbpZGw",
+        authDomain: "udayamverse.firebaseapp.com",
+        databaseURL: "https://udayamverse-default-rtdb.asia-southeast1.firebasedatabase.app",
+        projectId: "udayamverse",
+        storageBucket: "udayamverse.firebasestorage.app",
+        messagingSenderId: "119963956254",
+        appId: "1:119963956254:web:68de80a73d6aeb4bf5ea0f",
+        measurementId: "G-L6E1MC1CJC"
+    };
+
+    // Initialize Firebase
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const database = firebase.database();
+
+    // ========================
+    // User Profile Data
+    // ========================
+    let userProfile = {
+        name: "Founder User",
+        email: "udyamverse@gmail.com",
+        avatar: "https://ui-avatars.com/api/?background=00c9ff&color=fff&name=Founder"
+    };
+    
+    let currentUser = null;
+
+    // ========================
+    // Load User Profile from Firebase
+    // ========================
+    async function loadUserProfile(userId) {
+        try {
+            const userRef = database.ref('users/' + userId);
+            const snapshot = await userRef.once('value');
+            const userData = snapshot.val();
+            
+            if (userData) {
+                currentUser = {
+                    uid: userId,
+                    email: userData.email,
+                    name: userData.name || userData.fullName || 'User',
+                    avatar: (userData.name || userData.fullName || 'U').charAt(0).toUpperCase(),
+                    userType: userData.userType || 'founder',
+                    startupName: userData.startupName || '',
+                    firm: userData.firm || ''
+                };
+                
+                userProfile = {
+                    name: currentUser.name,
+                    email: currentUser.email,
+                    avatar: `https://ui-avatars.com/api/?background=00c9ff&color=fff&name=${encodeURIComponent(currentUser.name)}`
+                };
+                localStorage.setItem('userProfile', JSON.stringify(userProfile));
+                updateProfileDisplay();
+            }
+        } catch (error) {
+            console.error("Error loading user profile:", error);
+        }
+    }
+    
+    function updateProfileDisplay() {
+        const displayName = userProfile.name.split(' ')[0];
+        const userNameSpan = document.getElementById('userNameDisplay');
+        if (userNameSpan) userNameSpan.innerText = displayName;
+        
+        const dropdownUserName = document.getElementById('dropdownUserName');
+        if (dropdownUserName) dropdownUserName.innerText = userProfile.name;
+        
+        const dropdownUserEmail = document.getElementById('dropdownUserEmail');
+        if (dropdownUserEmail) dropdownUserEmail.innerText = userProfile.email;
+        
+        const avatarImg = document.getElementById('userAvatar');
+        if (avatarImg) avatarImg.src = userProfile.avatar;
+    }
+    
+    // ========================
+    // Firebase Auth State Listener
+    // ========================
+    auth.onAuthStateChanged(async (user) => {
+        if (user) {
+            currentUser = user;
+            await loadUserProfile(user.uid);
+        } else {
+            // No user logged in, redirect to login page
+            window.location.href = 'index.html';
+        }
+    });
+    
+    // ========================
+    // Profile Dropdown Functions
+    // ========================
+    const profileDropdown = document.getElementById('profileDropdown');
+    const profileBtn = document.getElementById('profileBtn');
+    
+    if (profileBtn && profileDropdown) {
+        profileBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            profileDropdown.classList.toggle('active');
+        });
+        
+        document.addEventListener('click', (e) => {
+            if (!profileDropdown.contains(e.target)) {
+                profileDropdown.classList.remove('active');
+            }
+        });
+    }
+    
+    function viewProfile() {
+        alert(`👤 Profile Information\n\nName: ${userProfile.name}\nEmail: ${userProfile.email}\n\nPremium Member since 2024`);
+        if (profileDropdown) profileDropdown.classList.remove('active');
+    }
+    
+    function editProfile() {
+        const modal = document.createElement('div');
+        modal.className = 'modal-overlay';
+        modal.innerHTML = `
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3><i class="fas fa-user-edit"></i> Edit Profile</h3>
+                    <button class="close-modal" onclick="this.closest('.modal-overlay').remove()">✕</button>
+                </div>
+                <div class="modal-body">
+                    <input type="text" id="editName" placeholder="Full Name" value="${userProfile.name}">
+                    <input type="email" id="editEmail" placeholder="Email Address" value="${userProfile.email}">
+                    <button class="gen-btn" style="width: 100%;" onclick="saveProfileFromModal()">Save Changes</button>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(modal);
+        if (profileDropdown) profileDropdown.classList.remove('active');
+    }
+    
+    window.saveProfileFromModal = async function() {
+        const newName = document.getElementById('editName').value;
+        const newEmail = document.getElementById('editEmail').value;
+        if (newName && newEmail && currentUser) {
+            try {
+                await database.ref('users/' + currentUser.uid).update({
+                    name: newName,
+                    email: newEmail
+                });
+                userProfile.name = newName;
+                userProfile.email = newEmail;
+                userProfile.avatar = `https://ui-avatars.com/api/?background=00c9ff&color=fff&name=${encodeURIComponent(newName)}`;
+                localStorage.setItem('userProfile', JSON.stringify(userProfile));
+                updateProfileDisplay();
+                document.querySelector('.modal-overlay').remove();
+                alert('Profile updated successfully!');
+            } catch (error) {
+                alert('Error updating profile: ' + error.message);
+            }
+        } else {
+            alert('Please fill in all fields');
+        }
+    };
+    
+    function showSettings() {
+        alert(`⚙️ Settings\n\n• Theme: Dark Mode\n• Notifications: Enabled\n• Language: English\n• Data Sync: Auto\n\nMore settings coming soon!`);
+        if (profileDropdown) profileDropdown.classList.remove('active');
+    }
+    
+    function showNotifications() {
+        alert(`🔔 Notifications (3)\n\n1. Your startup analysis is ready\n2. New investor match found\n3. Weekly market report available`);
+        if (profileDropdown) profileDropdown.classList.remove('active');
+    }
+    
+    function showHelp() {
+        alert(`❓ Help & Support\n\n📧 Email: udyamverse@gmail.com\n💬 Live Chat: Click the chat button\n📚 Documentation: Available in dashboard\n\nWe're here to help 24/7!`);
+        if (profileDropdown) profileDropdown.classList.remove('active');
+    }
+    
+    function signOut() {
+        if (confirm('Are you sure you want to sign out?')) {
+            auth.signOut().then(() => {
+                localStorage.removeItem('userProfile');
+                localStorage.removeItem('isLoggedIn');
+                window.location.href = 'index.html';
+            }).catch((error) => {
+                console.error('Sign out error:', error);
+                alert('Error signing out. Please try again.');
+            });
+        }
+        if (profileDropdown) profileDropdown.classList.remove('active');
+    }
+    
+    function showNotifications() {
+        alert(`🔔 Notifications (3)\n\n1. Your startup analysis is ready\n2. New investor match found\n3. Weekly market report available`);
+        if (profileDropdown) profileDropdown.classList.remove('active');
+    }
+    
+    // ========================
+    // Helper Functions
+    // ========================
+    function openStimulatorPage() {
+        window.open('http://localhost:5001', '_blank');
+    }
+    
+    function openStimulator() {
+        window.open('http://localhost:5001', '_blank');
+    }
+    
+    // Particle Animation
+    const canvas = document.getElementById('particleCanvas');
+    const ctx = canvas.getContext('2d');
+    let width = window.innerWidth, height = window.innerHeight;
+    let particles = [];
+    const PARTICLE_COUNT = 100;
+    
+    function resizeCanvas() { width = window.innerWidth; height = window.innerHeight; canvas.width = width; canvas.height = height; }
+    class Particle { constructor() { this.x = Math.random() * width; this.y = Math.random() * height; this.vx = (Math.random() - 0.5) * 0.4; this.vy = (Math.random() - 0.5) * 0.3; this.radius = Math.random() * 2 + 1.2; this.alpha = Math.random() * 0.5 + 0.2; } update() { this.x += this.vx; this.y += this.vy; if (this.x < 0) this.x = width; if (this.x > width) this.x = 0; if (this.y < 0) this.y = height; if (this.y > height) this.y = 0; } draw() { ctx.beginPath(); ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2); ctx.fillStyle = `rgba(80, 210, 255, ${this.alpha})`; ctx.fill(); } }
+    function initParticles() { particles = []; for (let i = 0; i < PARTICLE_COUNT; i++) particles.push(new Particle()); }
+    function animateParticles() { if(!ctx) return; ctx.clearRect(0, 0, width, height); for (let p of particles) { p.update(); p.draw(); } for (let i = 0; i < particles.length; i++) { for (let j = i+1; j < particles.length; j++) { const dx = particles[i].x - particles[j].x, dy = particles[i].y - particles[j].y, dist = Math.hypot(dx, dy); if (dist < 120) { ctx.beginPath(); ctx.moveTo(particles[i].x, particles[i].y); ctx.lineTo(particles[j].x, particles[j].y); ctx.strokeStyle = `rgba(0, 200, 255, ${0.15 * (1 - dist/120)})`; ctx.stroke(); } } } requestAnimationFrame(animateParticles); }
+    resizeCanvas(); initParticles(); animateParticles();
+    window.addEventListener('resize', () => { resizeCanvas(); initParticles(); });
+    
+    function openChat() {
+        const wrapper = document.createElement('div');
+        const iframe = document.createElement('iframe');
+        iframe.src = 'http://localhost:5000';
+        iframe.style.width = '100%';
+        iframe.style.height = '100%';
+        iframe.style.border = 'none';
+        const backBtn = document.createElement('button');
+        backBtn.innerText = '⬅ Back';
+        backBtn.style.position = 'absolute';
+        backBtn.style.top = '15px';
+        backBtn.style.left = '20px';
+        backBtn.style.padding = '10px 15px';
+        backBtn.style.background = '#ff4d4d';
+        backBtn.style.color = 'white';
+        backBtn.style.border = 'none';
+        backBtn.style.borderRadius = '8px';
+        backBtn.style.cursor = 'pointer';
+        backBtn.style.zIndex = '10000';
+        backBtn.onclick = () => wrapper.remove();
+        wrapper.style.position = 'fixed';
+        wrapper.style.top = '0';
+        wrapper.style.left = '0';
+        wrapper.style.width = '100vw';
+        wrapper.style.height = '100vh';
+        wrapper.style.zIndex = '9999';
+        wrapper.appendChild(iframe);
+        wrapper.appendChild(backBtn);
+        document.body.appendChild(wrapper);
+    }
+    
+    // Stimulator button handler
+    const stimulateBtn = document.getElementById('stimulateBtn');
+    if (stimulateBtn) {
+        const newBtn = stimulateBtn.cloneNode(true);
+        stimulateBtn.parentNode.replaceChild(newBtn, stimulateBtn);
+        newBtn.addEventListener('click', function(e) { 
+            e.preventDefault(); 
+            window.open('http://localhost:5001', '_blank');
+        });
+    }
+    
+    // Initialize profile display with localStorage fallback
+    const savedProfile = localStorage.getItem('userProfile');
+    if (savedProfile) {
+        userProfile = JSON.parse(savedProfile);
+        updateProfileDisplay();
+    }
+</script>
+</body>
+</html>

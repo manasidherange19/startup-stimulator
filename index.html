@@ -1,0 +1,942 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>UdyamVerse | AI-Powered Startup Intelligence Platform</title>
+
+    <!-- Boxicons CDN -->
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700;14..32,800&display=swap" rel="stylesheet">
+
+    <!-- Firebase SDKs (CDN - Proper way without import) -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #0a0c12;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1.5rem;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        /* Sophisticated animated gradient background */
+        .bg-gradient {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at 20% 30%, #0f1222, #03050b);
+            z-index: -3;
+        }
+
+        .bg-gradient::before {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at 80% 70%, rgba(0, 180, 255, 0.12), transparent 55%);
+            animation: slowDrift 18s infinite alternate;
+        }
+
+        @keyframes slowDrift {
+            0% { opacity: 0.4; transform: scale(1) translateX(0); }
+            100% { opacity: 0.9; transform: scale(1.2) translateX(3%); }
+        }
+
+        /* Refined particle canvas (light, elegant) */
+        #particleCanvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: -1;
+            opacity: 0.6;
+        }
+
+        /* Main card container */
+        .auth-container {
+            width: 1180px;
+            max-width: 95%;
+            background: rgba(12, 16, 28, 0.65);
+            backdrop-filter: blur(20px);
+            border-radius: 2.5rem;
+            border: 1px solid rgba(56, 189, 248, 0.25);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(56, 189, 248, 0.1) inset;
+            overflow: hidden;
+            transition: all 0.4s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+        }
+
+        /* Two-column flexible layout */
+        .auth-grid {
+            display: flex;
+            min-height: 680px;
+        }
+
+        /* Forms Panel */
+        .forms-panel {
+            flex: 1.2;
+            padding: 2.5rem;
+            position: relative;
+            transition: all 0.4s ease;
+        }
+
+        /* Info Panel */
+        .info-panel {
+            flex: 0.9;
+            background: linear-gradient(135deg, rgba(2, 150, 199, 0.1) 0%, rgba(88, 28, 135, 0.15) 100%);
+            backdrop-filter: blur(4px);
+            border-left: 1px solid rgba(56, 189, 248, 0.2);
+            padding: 2.5rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            transition: all 0.4s ease;
+        }
+
+        /* Form wrappers with smooth crossfade */
+        .form-wrapper {
+            transition: opacity 0.4s ease, transform 0.4s ease;
+        }
+
+        .form-wrapper.hidden {
+            display: none;
+        }
+
+        .form-wrapper.active {
+            display: block;
+            animation: fadeSlideUp 0.5s ease forwards;
+        }
+
+        @keyframes fadeSlideUp {
+            from {
+                opacity: 0;
+                transform: translateY(12px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        h2 {
+            font-size: 2rem;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            background: linear-gradient(to right, #ffffff, #b3e4ff);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            margin-bottom: 0.5rem;
+        }
+
+        .form-sub {
+            color: #94a3b8;
+            font-size: 0.85rem;
+            margin-bottom: 2rem;
+            border-left: 2px solid #2dd4bf;
+            padding-left: 0.75rem;
+        }
+
+        /* Input group modern design */
+        .input-group {
+            margin-bottom: 1.5rem;
+            position: relative;
+        }
+
+        .input-group i {
+            position: absolute;
+            left: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 1.2rem;
+            color: #5ee0fa;
+            pointer-events: none;
+            transition: color 0.2s;
+        }
+
+        .input-group input, .input-group select {
+            width: 100%;
+            padding: 0.9rem 1rem 0.9rem 2.8rem;
+            background: rgba(2, 10, 22, 0.7);
+            border: 1px solid rgba(56, 189, 248, 0.3);
+            border-radius: 1.2rem;
+            font-size: 0.9rem;
+            color: #f1f5f9;
+            font-family: 'Inter', sans-serif;
+            transition: all 0.2s;
+            outline: none;
+        }
+
+        .input-group select {
+            padding: 0.9rem 2.8rem 0.9rem 2.8rem;
+            cursor: pointer;
+            appearance: none;
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="%235ee0fa" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>');
+            background-repeat: no-repeat;
+            background-position: right 1rem center;
+        }
+
+        .input-group input:focus, .input-group select:focus {
+            border-color: #2dd4bf;
+            box-shadow: 0 0 0 3px rgba(45, 212, 191, 0.2);
+            background: rgba(8, 18, 34, 0.9);
+        }
+
+        /* Radio toggle (elegant chip style) */
+        .user-type-toggle {
+            display: flex;
+            gap: 0.8rem;
+            margin: 1.8rem 0 1.5rem;
+        }
+
+        .type-option {
+            flex: 1;
+            position: relative;
+        }
+
+        .type-option input {
+            position: absolute;
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .type-option label {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.6rem;
+            padding: 0.7rem;
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid rgba(56, 189, 248, 0.25);
+            border-radius: 2rem;
+            font-weight: 500;
+            font-size: 0.85rem;
+            color: #cbd5e1;
+            cursor: pointer;
+            transition: all 0.2s;
+            backdrop-filter: blur(4px);
+        }
+
+        .type-option input:checked + label {
+            background: linear-gradient(105deg, #0e2a3a, #0f172a);
+            border-color: #2dd4bf;
+            color: white;
+            box-shadow: 0 0 12px rgba(45, 212, 191, 0.3);
+        }
+
+        .type-option label i {
+            font-size: 1.1rem;
+        }
+
+        /* Dynamic fields container (clean and smooth) */
+        .dynamic-fields {
+            margin-top: 0.5rem;
+            transition: all 0.3s ease;
+        }
+
+        .field-section {
+            display: none;
+            animation: fadeIn 0.35s ease forwards;
+        }
+
+        .field-section.active-section {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(8px);}
+            to { opacity: 1; transform: translateY(0);}
+        }
+
+        /* Button */
+        .auth-btn {
+            width: 100%;
+            padding: 0.9rem;
+            background: linear-gradient(95deg, #0f4c5c, #2c3e66);
+            border: none;
+            border-radius: 2rem;
+            font-weight: 700;
+            font-size: 1rem;
+            color: white;
+            margin-top: 1rem;
+            cursor: pointer;
+            transition: all 0.25s;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            letter-spacing: 0.3px;
+        }
+
+        .auth-btn:hover {
+            background: linear-gradient(95deg, #1a6d82, #3b4f7a);
+            transform: translateY(-2px);
+            box-shadow: 0 12px 20px -10px rgba(45, 212, 191, 0.4);
+        }
+
+        /* Switch link */
+        .switch-link {
+            text-align: center;
+            margin-top: 1.8rem;
+            font-size: 0.85rem;
+            color: #8ca3b9;
+        }
+
+        .switch-link a {
+            color: #5ee0fa;
+            text-decoration: none;
+            font-weight: 600;
+            margin-left: 0.4rem;
+            transition: color 0.2s;
+        }
+
+        .switch-link a:hover {
+            color: #2dd4bf;
+            text-decoration: underline;
+        }
+
+        /* Info panel content */
+        .info-content {
+            text-align: left;
+        }
+
+        .info-content h3 {
+            font-size: 2rem;
+            font-weight: 700;
+            background: linear-gradient(125deg, #e0f2fe, #9bc5f0);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            margin-bottom: 1rem;
+        }
+
+        .info-content p {
+            color: #a5b4cb;
+            line-height: 1.5;
+            font-size: 0.9rem;
+            margin-bottom: 2rem;
+        }
+
+        .feature-list {
+            list-style: none;
+            margin-top: 1.5rem;
+        }
+
+        .feature-list li {
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            margin-bottom: 1rem;
+            color: #cbd5e6;
+            font-size: 0.85rem;
+        }
+
+        .feature-list li i {
+            color: #2dd4bf;
+            font-size: 1.2rem;
+        }
+
+        /* Responsive behavior */
+        @media (max-width: 880px) {
+            .auth-grid {
+                flex-direction: column;
+            }
+            .info-panel {
+                border-left: none;
+                border-top: 1px solid rgba(56, 189, 248, 0.2);
+                text-align: center;
+                align-items: center;
+            }
+            .info-content {
+                text-align: center;
+            }
+            .feature-list li {
+                justify-content: center;
+            }
+            .forms-panel {
+                padding: 1.8rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .type-option label {
+                font-size: 0.75rem;
+                padding: 0.5rem;
+            }
+            .input-group input, .input-group select {
+                padding: 0.75rem 0.75rem 0.75rem 2.5rem;
+            }
+        }
+
+        /* Loading overlay */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.7);
+            backdrop-filter: blur(5px);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            flex-direction: column;
+            gap: 1rem;
+        }
+        .loading-spinner {
+            width: 50px;
+            height: 50px;
+            border: 3px solid rgba(45,212,191,0.3);
+            border-top-color: #2dd4bf;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        .loading-text {
+            color: white;
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+<div class="bg-gradient"></div>
+<canvas id="particleCanvas"></canvas>
+
+<div class="auth-container">
+    <div class="auth-grid">
+        <!-- LEFT / FORMS AREA -->
+        <div class="forms-panel">
+            <!-- LOGIN FORM -->
+            <div id="loginForm" class="form-wrapper active">
+                <h2>Welcome back</h2>
+                <div class="form-sub">Sign in to continue your venture journey</div>
+                <form id="loginFormElement" onsubmit="event.preventDefault(); handleLogin()">
+                    <div class="input-group">
+                        <i class='bx bx-user-circle'></i>
+                        <input type="text" id="loginIdentifier" placeholder="Email" required>
+                    </div>
+                    <div class="input-group">
+                        <i class='bx bx-lock-alt'></i>
+                        <input type="password" id="loginPasswordInput" placeholder="Password" required>
+                    </div>
+                    <button type="submit" class="auth-btn">Access Dashboard →</button>
+                    <div class="switch-link">
+                        New to UdyamVerse?? <a href="#" id="showRegisterBtn">Create account</a>
+                    </div>
+                </form>
+            </div>
+
+            <!-- REGISTER FORM -->
+            <div id="registerForm" class="form-wrapper hidden">
+                <h2>Launch your profile</h2>
+                <div class="form-sub">Join as founder or investor — tailored onboarding</div>
+                <form id="registerFormElement" onsubmit="event.preventDefault(); handleRegistration()">
+                    <div class="input-group">
+                        <i class='bx bx-user'></i>
+                        <input type="text" id="regFullName" placeholder="Full name" required>
+                    </div>
+                    <div class="input-group">
+                        <i class='bx bx-envelope'></i>
+                        <input type="email" id="regEmailAddr" placeholder="Email address" required>
+                    </div>
+                    <div class="input-group">
+                        <i class='bx bx-lock'></i>
+                        <input type="password" id="regPasswordField" placeholder="Password" required>
+                    </div>
+
+                    <!-- Clean user type toggle -->
+                    <div class="user-type-toggle">
+                        <div class="type-option">
+                            <input type="radio" name="accountType" id="typeFounder" value="founder" checked>
+                            <label for="typeFounder"><i class='bx bxs-briefcase'></i> Founder</label>
+                        </div>
+                        <div class="type-option">
+                            <input type="radio" name="accountType" id="typeInvestor" value="investor">
+                            <label for="typeInvestor"><i class='bx bxs-trending-up'></i> Investor</label>
+                        </div>
+                    </div>
+
+                    <!-- Dynamic fields (clean separation) -->
+                    <div class="dynamic-fields">
+                        <!-- Founder section -->
+                        <div id="founderSection" class="field-section active-section">
+                            <div class="input-group">
+                                <i class='bx bx-building-house'></i>
+                                <input type="text" id="startupNameField" placeholder="Startup / company name">
+                            </div>
+                            <div class="input-group">
+                                <i class='bx bx-category'></i>
+                                <select id="industrySelect">
+                                    <option value="" disabled selected>Industry focus</option>
+                                    <option>Artificial Intelligence / ML</option>
+                                    <option>Fintech & Blockchain</option>
+                                    <option>HealthTech / Bio</option>
+                                    <option>SaaS & Cloud</option>
+                                    <option>GreenTech / Climate</option>
+                                    <option>E-commerce & Retail</option>
+                                    <option>EdTech</option>
+                                    <option>Hardware / IoT</option>
+                                </select>
+                            </div>
+                            <div class="input-group">
+                                <i class='bx bx-line-chart'></i>
+                                <select id="startupStageSelect">
+                                    <option value="" disabled selected>Startup stage</option>
+                                    <option>Idea / Pre-seed</option>
+                                    <option>MVP Development</option>
+                                    <option>Early Traction</option>
+                                    <option>Scaling / Growth</option>
+                                    <option>Established</option>
+                                </select>
+                            </div>
+                            <div class="input-group">
+                                <i class='bx bxl-linkedin-square'></i>
+                                <input type="text" id="founderLinkedin" placeholder="LinkedIn / Website (optional)">
+                            </div>
+                        </div>
+
+                        <!-- Investor section -->
+                        <div id="investorSection" class="field-section">
+                            <div class="input-group">
+                                <i class='bx bx-buildings'></i>
+                                <input type="text" id="firmName" placeholder="Firm / organization name">
+                            </div>
+                            <div class="input-group">
+                                <i class='bx bx-target-lock'></i>
+                                <select id="investmentStageFocus">
+                                    <option value="" disabled selected>Investment stage</option>
+                                    <option>Pre-Seed / Angel</option>
+                                    <option>Seed</option>
+                                    <option>Series A</option>
+                                    <option>Series B+ / Growth</option>
+                                    <option>All stages</option>
+                                </select>
+                            </div>
+                            <div class="input-group">
+                                <i class='bx bx-world'></i>
+                                <select id="sectorFocus">
+                                    <option value="" disabled selected>Sector focus</option>
+                                    <option>Deep Tech & AI</option>
+                                    <option>Fintech & Web3</option>
+                                    <option>Climate & Sustainability</option>
+                                    <option>Healthcare & Bio</option>
+                                    <option>Consumer & Retail</option>
+                                    <option>B2B SaaS</option>
+                                    <option>All sectors</option>
+                                </select>
+                            </div>
+                            <div class="input-group">
+                                <i class='bx bx-dollar'></i>
+                                <input type="text" id="ticketSize" placeholder="Typical check size (e.g., $100K - $1M)">
+                            </div>
+                            <div class="input-group">
+                                <i class='bx bxl-linkedin'></i>
+                                <input type="text" id="investorLinkedinUrl" placeholder="LinkedIn / Profile">
+                            </div>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="auth-btn">Launch my profile →</button>
+                    <div class="switch-link">
+                        Already have an account? <a href="#" id="showLoginBtn">Sign in</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- RIGHT INFO PANEL (DYNAMIC) -->
+        <div class="info-panel">
+            <div id="loginInfo" class="info-content">
+                <h3>AI-powered venture ecosystem</h3>
+                <p>Connect with co-founders, discover smart capital, and leverage AI insights to accelerate your startup journey.</p>
+                <ul class="feature-list">
+                    <li><i class='bx bx-brain'></i> AI-driven market intelligence</li>
+                    <li><i class='bx bx-network-chart'></i> Smart founder-investor matching</li>
+                    <li><i class='bx bx-line-chart-down'></i> Real-time pitch readiness score</li>
+                </ul>
+            </div>
+            <div id="registerInfo" class="info-content" style="display: none;">
+                <h3>Shape the future of innovation</h3>
+                <p>Whether you're building the next unicorn or backing visionary teams — get tailored tools, curated insights, and a premium network.</p>
+                <ul class="feature-list">
+                    <li><i class='bx bx-rocket'></i> Personalized growth roadmap</li>
+                    <li><i class='bx bxs-bank'></i> Investor relations toolkit</li>
+                    <li><i class='bx bx-data'></i> Benchmarking & AI recommendations</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Loading Overlay -->
+<div id="loadingOverlay" class="loading-overlay">
+    <div class="loading-spinner"></div>
+    <div class="loading-text">Processing...</div>
+</div>
+
+<script>
+    // ========================
+    // Particle System
+    // ========================
+    const canvas = document.getElementById('particleCanvas');
+    let ctx = canvas.getContext('2d');
+    let width = window.innerWidth;
+    let height = window.innerHeight;
+    let particles = [];
+
+    function resizeCanvas() {
+        width = window.innerWidth;
+        height = window.innerHeight;
+        canvas.width = width;
+        canvas.height = height;
+        initParticles();
+    }
+
+    class SmoothParticle {
+        constructor() {
+            this.x = Math.random() * width;
+            this.y = Math.random() * height;
+            this.vx = (Math.random() - 0.5) * 0.25;
+            this.vy = (Math.random() - 0.5) * 0.2;
+            this.radius = Math.random() * 2 + 1;
+            this.opacity = Math.random() * 0.4 + 0.1;
+        }
+        update() {
+            this.x += this.vx;
+            this.y += this.vy;
+            if (this.x < -20) this.x = width + 20;
+            if (this.x > width + 20) this.x = -20;
+            if (this.y < -20) this.y = height + 20;
+            if (this.y > height + 20) this.y = -20;
+        }
+        draw() {
+            ctx.beginPath();
+            ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+            ctx.fillStyle = `rgba(80, 210, 255, ${this.opacity * 0.7})`;
+            ctx.fill();
+        }
+    }
+
+    function initParticles() {
+        particles = [];
+        const count = Math.min(80, Math.floor(width * height / 10000));
+        for (let i = 0; i < count; i++) {
+            particles.push(new SmoothParticle());
+        }
+    }
+
+    function connectParticles() {
+        for (let i = 0; i < particles.length; i++) {
+            for (let j = i + 1; j < particles.length; j++) {
+                const dx = particles[i].x - particles[j].x;
+                const dy = particles[i].y - particles[j].y;
+                const dist = Math.hypot(dx, dy);
+                if (dist < 110) {
+                    ctx.beginPath();
+                    ctx.moveTo(particles[i].x, particles[i].y);
+                    ctx.lineTo(particles[j].x, particles[j].y);
+                    ctx.strokeStyle = `rgba(45, 212, 191, ${0.12 * (1 - dist / 110)})`;
+                    ctx.stroke();
+                }
+            }
+        }
+    }
+
+    function animateParticles() {
+        if (!ctx) return;
+        ctx.clearRect(0, 0, width, height);
+        for (let p of particles) {
+            p.update();
+            p.draw();
+        }
+        connectParticles();
+        requestAnimationFrame(animateParticles);
+    }
+
+    window.addEventListener('resize', () => {
+        resizeCanvas();
+    });
+    resizeCanvas();
+    animateParticles();
+
+    // ========================
+    // Firebase Configuration
+    // ========================
+    const firebaseConfig = {
+        apiKey: "AIzaSyD0ekRSOYjLFLnsIBanetGCUzKAonbpZGw",
+        authDomain: "udayamverse.firebaseapp.com",
+        databaseURL: "https://udayamverse-default-rtdb.asia-southeast1.firebasedatabase.app",
+        projectId: "udayamverse",
+        storageBucket: "udayamverse.firebasestorage.app",
+        messagingSenderId: "119963956254",
+        appId: "1:119963956254:web:68de80a73d6aeb4bf5ea0f",
+        measurementId: "G-L6E1MC1CJC"
+    };
+
+    // Initialize Firebase
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const database = firebase.database();
+
+    // ========================
+    // UI Logic: Form Toggle & Dynamic Fields
+    // ========================
+    const loginFormDiv = document.getElementById('loginForm');
+    const registerFormDiv = document.getElementById('registerForm');
+    const loginInfoDiv = document.getElementById('loginInfo');
+    const registerInfoDiv = document.getElementById('registerInfo');
+    const showRegisterBtn = document.getElementById('showRegisterBtn');
+    const showLoginBtn = document.getElementById('showLoginBtn');
+    const typeFounder = document.getElementById('typeFounder');
+    const typeInvestor = document.getElementById('typeInvestor');
+    const founderSection = document.getElementById('founderSection');
+    const investorSection = document.getElementById('investorSection');
+    const loadingOverlay = document.getElementById('loadingOverlay');
+
+    function showLoading() {
+        loadingOverlay.style.display = 'flex';
+    }
+
+    function hideLoading() {
+        loadingOverlay.style.display = 'none';
+    }
+
+    function switchToRegister() {
+        loginFormDiv.classList.remove('active');
+        loginFormDiv.classList.add('hidden');
+        registerFormDiv.classList.remove('hidden');
+        registerFormDiv.classList.add('active');
+        loginInfoDiv.style.display = 'none';
+        registerInfoDiv.style.display = 'block';
+        document.getElementById('registerFormElement').reset();
+        toggleRoleFields();
+    }
+
+    function switchToLogin() {
+        registerFormDiv.classList.remove('active');
+        registerFormDiv.classList.add('hidden');
+        loginFormDiv.classList.remove('hidden');
+        loginFormDiv.classList.add('active');
+        registerInfoDiv.style.display = 'none';
+        loginInfoDiv.style.display = 'block';
+        document.getElementById('loginFormElement').reset();
+    }
+
+    showRegisterBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        switchToRegister();
+    });
+    showLoginBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        switchToLogin();
+    });
+
+    function toggleRoleFields() {
+        const isFounder = typeFounder.checked;
+        if (isFounder) {
+            founderSection.classList.add('active-section');
+            investorSection.classList.remove('active-section');
+        } else {
+            founderSection.classList.remove('active-section');
+            investorSection.classList.add('active-section');
+        }
+    }
+
+    typeFounder.addEventListener('change', toggleRoleFields);
+    typeInvestor.addEventListener('change', toggleRoleFields);
+    toggleRoleFields();
+
+    // ========================
+    // Firebase Authentication Functions
+    // ========================
+    
+    // Handle Login with Firebase
+    async function handleLogin() {
+        const email = document.getElementById('loginIdentifier').value.trim();
+        const password = document.getElementById('loginPasswordInput').value.trim();
+        
+        if (!email || !password) {
+            alert("⚠️ Please enter your email and password.");
+            return;
+        }
+        
+        showLoading();
+        
+        try {
+            // Sign in with Firebase Auth
+            const userCredential = await auth.signInWithEmailAndPassword(email, password);
+            const user = userCredential.user;
+            
+            // Get user data from Realtime Database
+            const userRef = database.ref('users/' + user.uid);
+            const snapshot = await userRef.once('value');
+            const userData = snapshot.val();
+            
+            if (userData) {
+                localStorage.setItem('isLoggedIn', 'true');
+                localStorage.setItem('activeUserName', userData.name);
+                localStorage.setItem('activeUserType', userData.userType);
+                localStorage.setItem('activeUserEmail', user.email);
+                localStorage.setItem('userData', JSON.stringify(userData));
+            } else {
+                localStorage.setItem('isLoggedIn', 'true');
+                localStorage.setItem('activeUserName', user.email);
+                localStorage.setItem('activeUserType', 'founder');
+                localStorage.setItem('activeUserEmail', user.email);
+            }
+            
+            hideLoading();
+            window.location.href = 'homepage.html';
+            
+        } catch (error) {
+            hideLoading();
+            console.error("Login error:", error);
+            
+            let errorMessage = "Login failed. ";
+            switch (error.code) {
+                case 'auth/user-not-found':
+                    errorMessage += "No account found with this email.";
+                    break;
+                case 'auth/wrong-password':
+                    errorMessage += "Incorrect password.";
+                    break;
+                case 'auth/invalid-email':
+                    errorMessage += "Invalid email format.";
+                    break;
+                default:
+                    errorMessage += error.message;
+            }
+            alert("⚠️ " + errorMessage);
+        }
+    }
+
+    // Handle Registration with Firebase
+    async function handleRegistration() {
+        const fullName = document.getElementById('regFullName').value.trim();
+        const email = document.getElementById('regEmailAddr').value.trim();
+        const password = document.getElementById('regPasswordField').value.trim();
+        
+        if (!fullName || !email || !password) {
+            alert("⚠️ Please fill all required fields (Name, Email, Password).");
+            return;
+        }
+        
+        if (password.length < 6) {
+            alert("⚠️ Password must be at least 6 characters long.");
+            return;
+        }
+        
+        const userType = document.querySelector('input[name="accountType"]:checked').value;
+        
+        showLoading();
+        
+        try {
+            // Create user with Firebase Auth
+            const userCredential = await auth.createUserWithEmailAndPassword(email, password);
+            const user = userCredential.user;
+            
+            // Prepare user profile data
+            let profileData = {
+                name: fullName,
+                email: email,
+                userType: userType,
+                userId: user.uid,
+                registeredAt: new Date().toISOString()
+            };
+            
+            if (userType === 'founder') {
+                profileData.startupName = document.getElementById('startupNameField').value.trim() || "Not specified";
+                profileData.industry = document.getElementById('industrySelect').value;
+                profileData.stage = document.getElementById('startupStageSelect').value;
+                profileData.linkedin = document.getElementById('founderLinkedin').value.trim();
+            } else {
+                profileData.firm = document.getElementById('firmName').value.trim() || "Independent Investor";
+                profileData.investmentStage = document.getElementById('investmentStageFocus').value;
+                profileData.sectorFocus = document.getElementById('sectorFocus').value;
+                profileData.ticketSize = document.getElementById('ticketSize').value.trim();
+                profileData.linkedin = document.getElementById('investorLinkedinUrl').value.trim();
+            }
+            
+            // Save to Firebase Realtime Database
+            await database.ref('users/' + user.uid).set(profileData);
+            
+            // Store in localStorage for session
+            localStorage.setItem('venture_user', JSON.stringify(profileData));
+            localStorage.setItem('isLoggedIn', 'true');
+            localStorage.setItem('activeUserName', fullName);
+            localStorage.setItem('activeUserType', userType);
+            localStorage.setItem('activeUserEmail', email);
+            localStorage.setItem('userData', JSON.stringify(profileData));
+            
+            hideLoading();
+            
+            // Redirect based on user type
+            if (userType === 'investor') {
+                window.location.href = 'investor2.html';
+            } else {
+                window.location.href = 'subscription.html';
+            }
+            
+        } catch (error) {
+            hideLoading();
+            console.error("Registration error:", error);
+            
+            let errorMessage = "Registration failed. ";
+            switch (error.code) {
+                case 'auth/email-already-in-use':
+                    errorMessage += "This email is already registered.";
+                    break;
+                case 'auth/invalid-email':
+                    errorMessage += "Invalid email format.";
+                    break;
+                case 'auth/weak-password':
+                    errorMessage += "Password is too weak.";
+                    break;
+                default:
+                    errorMessage += error.message;
+            }
+            alert("⚠️ " + errorMessage);
+        }
+    }
+
+    // Check if user is already logged in
+    auth.onAuthStateChanged((user) => {
+        if (user && window.location.pathname.includes('.html')) {
+            // User is logged in, redirect based on user type
+            const userData = localStorage.getItem('userData');
+            if (userData) {
+                const parsedData = JSON.parse(userData);
+                if (parsedData.userType === 'investor') {
+                    window.location.href = 'investor2.html';
+                } else {
+                    window.location.href = 'homepage.html';
+                }
+            } else {
+                window.location.href = 'homepage.html';
+            }
+        }
+    });
+</script>
+</body>
+</html>

@@ -1,0 +1,610 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>AI VentureForge | Neural Dashboard</title>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: #05050f; font-family: 'Space Grotesk', sans-serif; overflow-x: hidden; color: #eef5ff; }
+    .bg-orb { position: fixed; width: 100vw; height: 100vh; top: 0; left: 0; z-index: -2; background: radial-gradient(circle at 20% 30%, #0a0a2a, #010105); }
+    .bg-orb::before { content: ""; position: absolute; width: 100%; height: 100%; background: radial-gradient(circle at 70% 60%, rgba(0, 255, 255, 0.08), transparent 60%); animation: pulseGlow 12s infinite alternate; }
+    @keyframes pulseGlow { 0% { opacity: 0.3; transform: scale(1);} 100% { opacity: 0.8; transform: scale(1.2);} }
+    canvas#particleCanvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; pointer-events: none; }
+    .dashboard { max-width: 1600px; margin: 0 auto; padding: 1.5rem 2rem 3rem; position: relative; z-index: 2; }
+    .nav-bar { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; margin-bottom: 2.5rem; padding: 1rem 2rem; background: rgba(10, 20, 30, 0.55); backdrop-filter: blur(14px); border-radius: 70px; border: 1px solid rgba(0, 255, 255, 0.25); box-shadow: 0 20px 40px rgba(0,0,0,0.4), 0 0 20px rgba(0,255,255,0.1); }
+    .logo { font-size: 1.6rem; font-weight: 700; background: linear-gradient(135deg, #aaffff, #4d8eff); -webkit-background-clip: text; background-clip: text; color: transparent; }
+    .logo i { background: none; color: #4dccff; margin-right: 8px; }
+    .nav-links { display: flex; gap: 0.8rem; flex-wrap: wrap; }
+    .nav-item { background: rgba(20, 30, 45, 0.6); backdrop-filter: blur(8px); padding: 0.6rem 1.5rem; border-radius: 40px; font-weight: 500; cursor: pointer; transition: all 0.3s; border: 1px solid rgba(80, 180, 255, 0.2); }
+    .nav-item i { margin-right: 8px; }
+    .nav-item:hover, .nav-item.active { background: linear-gradient(95deg, #0f2b3d, #0a1a2c); border-color: #3effea; box-shadow: 0 0 14px rgba(62, 255, 234, 0.4); transform: translateY(-3px); }
+    .hero-card { background: rgba(8, 18, 28, 0.65); backdrop-filter: blur(16px); border-radius: 2.5rem; padding: 2rem; margin-bottom: 2.5rem; border: 1px solid rgba(0, 230, 230, 0.4); box-shadow: 0 25px 45px -12px black; }
+    .glow-text { font-size: 2.5rem; font-weight: 700; background: linear-gradient(125deg, #FFFFFF, #7df9ff, #3a86ff); -webkit-background-clip: text; background-clip: text; color: transparent; margin-bottom: 1rem; }
+    .gen-btn { background: linear-gradient(95deg, #00c9ff, #5e2aff); border: none; padding: 0.8rem 2rem; border-radius: 60px; font-weight: bold; color: white; cursor: pointer; transition: 0.2s; font-family: inherit; }
+    .gen-btn:hover { transform: scale(1.02); box-shadow: 0 0 20px #00ddff; }
+    .grid-2col { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1.8rem; margin-bottom: 2rem; }
+    .grid-3col { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.8rem; }
+    .card { background: rgba(12, 22, 35, 0.65); backdrop-filter: blur(12px); border-radius: 1.8rem; padding: 1.5rem; border: 1px solid rgba(0, 255, 255, 0.2); transition: all 0.35s ease; }
+    .card:hover { transform: translateY(-8px); border-color: cyan; }
+    .card h3 { font-size: 1.3rem; margin-bottom: 1rem; display: flex; align-items: center; gap: 10px; }
+    @media (max-width: 1000px) { .grid-2col, .grid-3col { grid-template-columns: 1fr; } .dashboard { padding: 1rem; } .glow-text { font-size: 1.8rem; } }
+    footer { text-align: center; margin-top: 3rem; opacity: 0.6; font-size: 0.8rem; }
+    .pulse-dot { width: 10px; height: 10px; background: #ff3366; border-radius: 50%; display: inline-block; margin-left: 6px; animation: pulseRed 1.4s infinite; }
+    @keyframes pulseRed { 0% { box-shadow: 0 0 0 0 rgba(255,51,102,0.7);} 100% { box-shadow: 0 0 0 8px rgba(255,51,102,0);} }
+    
+    /* Bouncing Chat Button Styles */
+    .chat-bubble {
+        position: fixed;
+        bottom: 2rem;
+        right: 2rem;
+        z-index: 1000;
+        cursor: pointer;
+        animation: bounce 2s infinite;
+        transition: transform 0.3s ease;
+    }
+    
+    .chat-bubble:hover {
+        transform: scale(1.1);
+        animation: none;
+    }
+    
+    .chat-icon {
+        width: 60px;
+        height: 60px;
+        background: linear-gradient(135deg, #ff6b6b, #ff8e53);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 4px 15px rgba(255, 107, 107, 0.4);
+        transition: all 0.3s ease;
+    }
+    
+    .chat-icon i {
+        font-size: 28px;
+        color: white;
+    }
+    
+    @keyframes bounce {
+        0%, 100% {
+            transform: translateY(0);
+        }
+        50% {
+            transform: translateY(-15px);
+        }
+    }
+    
+    /* Optional: Add a subtle glow effect */
+    .chat-bubble::after {
+        content: '';
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        border-radius: 50%;
+        background: radial-gradient(circle, rgba(255,107,107,0.4), transparent);
+        animation: pulse 1.5s infinite;
+        z-index: -1;
+    }
+    
+    @keyframes pulse {
+        0% {
+            transform: scale(1);
+            opacity: 0.6;
+        }
+        100% {
+            transform: scale(1.3);
+            opacity: 0;
+        }
+    }
+    
+    /* Planner Styles */
+    .questionnaire-step { animation: fadeIn 0.5s ease; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+    .question-card { background: rgba(0, 0, 0, 0.4); border-radius: 1rem; padding: 1.5rem; margin-bottom: 1rem; border-left: 4px solid #00c9ff; }
+    .options-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-top: 1rem; }
+    .option-btn { background: rgba(20, 30, 45, 0.8); border: 1px solid rgba(0, 255, 255, 0.3); padding: 1rem; border-radius: 1rem; cursor: pointer; transition: all 0.3s; text-align: center; }
+    .option-btn:hover { background: rgba(0, 201, 255, 0.2); transform: translateY(-3px); border-color: #00c9ff; }
+    .option-btn.selected { background: linear-gradient(95deg, #00c9ff, #5e2aff); border-color: transparent; box-shadow: 0 0 15px rgba(0,201,255,0.5); }
+    .progress-bar { height: 6px; background: rgba(255,255,255,0.2); border-radius: 3px; margin-bottom: 2rem; overflow: hidden; }
+    .progress-fill { height: 100%; background: linear-gradient(90deg, #00c9ff, #5e2aff); width: 0%; transition: width 0.3s; border-radius: 3px; }
+    .plan-section { margin-bottom: 2rem; }
+    .plan-section h3 { color: #00c9ff; margin-bottom: 1rem; font-size: 1.4rem; border-bottom: 2px solid rgba(0,201,255,0.3); padding-bottom: 0.5rem; }
+    .plan-card { background: rgba(0, 0, 0, 0.3); border-radius: 1rem; padding: 1.2rem; margin-bottom: 1rem; border-left: 3px solid #00c9ff; }
+    .timeline-item { display: flex; margin-bottom: 1rem; padding: 1rem; background: rgba(0, 0, 0, 0.3); border-radius: 0.8rem; transition: all 0.3s; }
+    .timeline-item:hover { transform: translateX(5px); background: rgba(0, 201, 255, 0.1); }
+    .timeline-month { width: 100px; font-weight: bold; color: #00c9ff; }
+    .task-list { list-style: none; }
+    .task-list li { padding: 0.6rem 0; border-bottom: 1px solid rgba(255,255,255,0.1); display: flex; align-items: center; gap: 12px; }
+    .task-list li i { color: #00ffaa; width: 24px; }
+    .metric-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-top: 1rem; }
+    .metric-box { background: rgba(0, 0, 0, 0.4); padding: 1rem; border-radius: 0.8rem; text-align: center; }
+    .metric-number { font-size: 1.8rem; font-weight: bold; color: #00ffea; }
+    @media (max-width: 768px) { .timeline-item { flex-direction: column; } .timeline-month { margin-bottom: 0.5rem; } .metric-grid { grid-template-columns: 1fr; } }
+    textarea, input[type="text"] { background: rgba(0,0,0,0.6); border: 1px solid #00c9ff; border-radius: 1rem; padding: 1rem; color: white; font-family: inherit; width: 100%; margin-top: 1rem; }
+    textarea:focus, input:focus { outline: none; border-color: #ff00e0; box-shadow: 0 0 15px rgba(0,201,255,0.3); }
+    .btn-group { display: flex; gap: 1rem; justify-content: center; margin-top: 2rem; flex-wrap: wrap; }
+  </style>
+</head>
+<body>
+<div class="bg-orb"></div>
+<canvas id="particleCanvas"></canvas>
+
+<div class="dashboard">
+  <div class="nav-bar">
+    <div class="logo"><i class="fas fa-brain"></i> VENTURE<span style="color:#7df9ff">FORGE</span><span style="font-size:0.8rem;">·AI</span></div>
+    <div class="nav-links" id="navLinks">
+      <div class="nav-item active" data-tab="home"><i class="fas fa-home"></i> Homepage</div>
+      <div class="nav-item" data-tab="connection"><i class="fas fa-plug"></i> Connection</div>
+      <div class="nav-item" data-tab="notification"><i class="fas fa-bell"></i> Notification <span class="pulse-dot"></span></div>
+      <div class="nav-item" data-tab="planner"><i class="fas fa-calendar-alt"></i> Planner</div>
+      <div class="nav-item" data-tab="post"><i class="fas fa-pen-fancy"></i> Post</div>
+      <div class="nav-item" data-tab="stimulator"><i class="fas fa-chart-line"></i> Stimulator</div>
+    </div>
+  </div>
+
+  <!-- HOMEPAGE -->
+  <div id="homeContent">
+    <div class="hero-card">
+      <div class="glow-text"><i class="fas fa-robot"></i> AI That Turns Any Idea into a Startup Plan</div>
+      <p>Predict success, generate business model, competitor map & MVP — Venture Capital Intelligence</p>
+      <div class="idea-input-area" style="display:flex; gap:1rem; margin-top:1rem;">
+        <input type="text" id="ideaInput" placeholder="e.g., AI app for farmers, Drone delivery..." style="flex:2; background:rgba(0,0,0,0.6); border:1px solid #2affdd; border-radius:60px; padding:1rem;">
+        <button class="gen-btn" id="generatePlanBtn"><i class="fas fa-magic"></i> Analyze</button>
+      </div>
+      <div id="aiPlanOutput" class="hero-card" style="margin-top:1rem; padding:1rem;"><i class="fas fa-spinner fa-pulse"></i> Waiting...</div>
+    </div>
+    <div class="grid-2col">
+      <div class="card"><h3><i class="fas fa-chart-simple"></i> Success Predictor</h3><div id="successMeter"><div class="progress-risk" id="successPercent">--%</div><div style="background:#222; border-radius:30px; height:12px;"><div id="successFill" style="width:0%; height:12px; background: linear-gradient(90deg,#2aff9f,#00c6ff); border-radius:30px;"></div></div><p id="riskDesc">Risk Level: —</p></div><hr><h4>Revenue Strategy</h4><p id="revenueStrategy">—</p><h4>MVP Plan</h4><p id="mvpPlan">—</p></div>
+      <div class="card"><h3><i class="fas fa-chart-pie"></i> Competitor Analysis</h3><canvas id="competitorChart" height="150"></canvas><ul id="competitorList" style="margin-top:1rem;"><li>—</li></ul></div>
+    </div>
+    <div class="grid-3col">
+      <div class="card"><h3><i class="fas fa-chart-line"></i> Industry Comparison</h3><canvas id="industryChart" height="120"></canvas></div>
+      <div class="card"><h3><i class="fas fa-file-alt"></i> NLP Analysis</h3><p id="nlpScore">Sentiment: —</p><p id="pitchKeywords">Keywords: —</p></div>
+      <div class="card"><h3><i class="fas fa-chart-bar"></i> Financial Snapshot</h3><p>ROI: <span id="roiProjection">—</span></p><p>Burn Rate: <span id="burnRate">—</span></p></div>
+    </div>
+  </div>
+
+  <!-- PLANNER PAGE - COMPREHENSIVE STARTUP PLAN GENERATOR -->
+  <div id="plannerContent" style="display:none;">
+    <div class="hero-card">
+      <div class="glow-text"><i class="fas fa-calendar-alt"></i> AI Startup Plan Generator</div>
+      <p>Enter your raw idea, answer detailed questions, and receive a complete, actionable startup roadmap</p>
+      
+      <!-- Step 1: Raw Idea -->
+      <div id="stepIdea" class="questionnaire-step">
+        <div class="question-card">
+          <h3><i class="fas fa-lightbulb"></i> Step 1: Your Startup Idea</h3>
+          <textarea id="rawIdeaInput" rows="3" placeholder="Describe your startup idea in detail... (e.g., An AI-powered platform that helps farmers optimize crop yield using satellite imagery and weather data)"></textarea>
+          <button class="gen-btn" style="margin-top:1rem;" onclick="startQuestionnaire()"><i class="fas fa-arrow-right"></i> Continue to Detailed Questionnaire</button>
+        </div>
+      </div>
+      
+      <!-- Step 2: Questionnaire -->
+      <div id="stepQuestions" style="display:none;">
+        <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+        <div id="questionContainer"></div>
+        <div style="display: flex; gap: 1rem; justify-content: space-between; margin-top: 1rem;">
+          <button class="gen-btn" id="prevBtn" onclick="prevQuestion()" style="display:none;"><i class="fas fa-chevron-left"></i> Previous</button>
+          <button class="gen-btn" id="nextBtn" onclick="nextQuestion()">Next <i class="fas fa-chevron-right"></i></button>
+          <button class="gen-btn" id="generatePlanBtnPlanner" onclick="generateStartupPlan()" style="display:none; background: linear-gradient(95deg, #00ffaa, #00c9ff);"><i class="fas fa-magic"></i> Generate Complete Plan</button>
+        </div>
+      </div>
+      
+      <!-- Step 3: Complete Plan -->
+      <div id="stepPlan" style="display:none;">
+        <div id="startupPlan"></div>
+        <div class="btn-group">
+          <button class="gen-btn" onclick="resetPlanner()"><i class="fas fa-plus"></i> Create New Plan</button>
+          <button class="gen-btn" onclick="downloadPlan()"><i class="fas fa-download"></i> Download Plan (Text)</button>
+          <button class="gen-btn" onclick="window.print()"><i class="fas fa-print"></i> Print Plan</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Other Tabs -->
+  <div id="connectionContent" style="display:none;" class="hero-card"><h2><i class="fas fa-plug"></i> AI Connect Hub</h2><p>Connect to investor networks, market APIs, and real-time data sources.</p><button class="gen-btn">Connect Now</button></div>
+  <div id="notificationContent" style="display:none;" class="hero-card"><h2><i class="fas fa-bell"></i> Notifications</h2><ul><li>✅ New AI model trained on 10,000+ startups</li><li>📊 Your success score improved by 15%</li><li>🎯 New funding opportunities available</li></ul></div>
+  <div id="postContent" style="display:none;" class="hero-card"><h2><i class="fas fa-pen-fancy"></i> Share & Get Feedback</h2><textarea rows="4" placeholder="Share your startup idea for AI analysis..."></textarea><button class="gen-btn" style="margin-top:1rem;">Analyze & Get Feedback</button></div>
+  <div id="stimulatorContent" style="display:none;" class="hero-card">
+    <h2><i class="fas fa-chart-line"></i> Market Stimulator</h2>
+    <p>Launch the advanced AI-powered market simulation tool to analyze your startup's potential.</p>
+    <button class="gen-btn" id="stimulateBtn"><i class="fas fa-chart-line"></i> Launch Stimulator</button>
+    <div id="stimResult" style="margin-top:1rem; color: #00c9ff; font-size: 0.9rem;"></div>
+  </div>
+  <footer>⚡ AI Venture Capital Intelligence · Predictive Failure Model · NLP Pitch Evaluator</footer>
+</div>
+
+<!-- Bouncing Chat Button - Added Here -->
+<div class="chat-bubble" onclick="openChat()">
+    <div class="chat-icon">
+        <i class="fas fa-comment-dots"></i>
+    </div>
+</div>
+
+<script>
+  // Chat Function - You can customize this to open a chat widget or modal
+  function openChat() {
+    const wrapper = document.createElement('div');
+
+    const iframe = document.createElement('iframe');
+    iframe.src = 'http://localhost:5000';
+    iframe.style.width = '100%';
+    iframe.style.height = '100%';
+    iframe.style.border = 'none';
+
+    const backBtn = document.createElement('button');
+    backBtn.innerText = '⬅ Back';
+    
+    backBtn.style.position = 'absolute';
+    backBtn.style.top = '15px';
+    backBtn.style.left = '20px';
+    backBtn.style.padding = '10px 15px';
+    backBtn.style.background = '#ff4d4d';
+    backBtn.style.color = 'white';
+    backBtn.style.border = 'none';
+    backBtn.style.borderRadius = '8px';
+    backBtn.style.cursor = 'pointer';
+    backBtn.style.zIndex = '10000';
+
+    backBtn.onclick = () => wrapper.remove();
+
+    wrapper.style.position = 'fixed';
+    wrapper.style.top = '0';
+    wrapper.style.left = '0';
+    wrapper.style.width = '100vw';
+    wrapper.style.height = '100vh';
+    wrapper.style.zIndex = '9999';
+
+    wrapper.appendChild(iframe);
+    wrapper.appendChild(backBtn);
+    document.body.appendChild(wrapper);
+}
+  function openStimulator() {
+  // Opens the stimulator.py service - change port if needed (default Flask port is 5000)
+  const stimulatorUrl = 'http://localhost:5000/stimulator';
+  window.open(stimulatorUrl, '_blank', 'noopener,noreferrer');
+}
+
+  // Particle Animation
+  const canvas = document.getElementById('particleCanvas');
+  const ctx = canvas.getContext('2d');
+  let width = window.innerWidth, height = window.innerHeight;
+  let particles = [];
+  const PARTICLE_COUNT = 100;
+  function resizeCanvas() { width = window.innerWidth; height = window.innerHeight; canvas.width = width; canvas.height = height; }
+  class Particle { constructor() { this.x = Math.random() * width; this.y = Math.random() * height; this.vx = (Math.random() - 0.5) * 0.4; this.vy = (Math.random() - 0.5) * 0.3; this.radius = Math.random() * 2 + 1.2; this.alpha = Math.random() * 0.5 + 0.2; } update() { this.x += this.vx; this.y += this.vy; if (this.x < 0) this.x = width; if (this.x > width) this.x = 0; if (this.y < 0) this.y = height; if (this.y > height) this.y = 0; } draw() { ctx.beginPath(); ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2); ctx.fillStyle = `rgba(80, 210, 255, ${this.alpha})`; ctx.fill(); } }
+  function initParticles() { particles = []; for (let i = 0; i < PARTICLE_COUNT; i++) particles.push(new Particle()); }
+  function animateParticles() { if(!ctx) return; ctx.clearRect(0, 0, width, height); for (let p of particles) { p.update(); p.draw(); } for (let i = 0; i < particles.length; i++) { for (let j = i+1; j < particles.length; j++) { const dx = particles[i].x - particles[j].x, dy = particles[i].y - particles[j].y, dist = Math.hypot(dx, dy); if (dist < 120) { ctx.beginPath(); ctx.moveTo(particles[i].x, particles[i].y); ctx.lineTo(particles[j].x, particles[j].y); ctx.strokeStyle = `rgba(0, 200, 255, ${0.15 * (1 - dist/120)})`; ctx.stroke(); } } } requestAnimationFrame(animateParticles); }
+  resizeCanvas(); initParticles(); animateParticles();
+  window.addEventListener('resize', () => { resizeCanvas(); initParticles(); });
+
+  // Enhanced Questionnaire (12 Categories for Comprehensive Planning)
+  const questions = [
+    { id: "industry", text: "What industry does your startup operate in?", options: ["Technology/SaaS", "Healthcare/Biotech", "Fintech", "E-commerce/Retail", "Education/EdTech", "Real Estate/PropTech", "Food/AgTech", "Transportation/Mobility", "Entertainment/Media", "Other"] },
+    { id: "targetAudience", text: "Who is your primary target audience?", options: ["B2B (Businesses)", "B2C (Consumers)", "B2B2C (Both)", "Enterprise (Large Companies)", "SMB (Small & Medium Businesses)", "Government/Public Sector", "Non-Profit Organizations"] },
+    { id: "problem", text: "What specific problem does your startup solve?", options: ["Saves time and increases efficiency", "Saves money and reduces costs", "Increases revenue/profits", "Improves quality of life/health", "Provides entertainment/engagement", "Solves a critical unmet need", "Automates manual processes"] },
+    { id: "businessModel", text: "What's your primary revenue model?", options: ["Subscription (SaaS/Recurring)", "Transaction/Marketplace Fee", "Advertising/Sponsorship", "Freemium with Premium Features", "One-time Purchase", "Licensing/IP Royalties", "Hardware/Physical Product", "Data Monetization", "Consulting/Services"] },
+    { id: "stage", text: "What stage is your startup currently at?", options: ["Idea/Concept Only", "Validating with Customer Interviews", "Building MVP/Prototype", "Launched with Early Users", "Generating Revenue", "Seeking Seed Funding", "Scaling/Growth Stage", "Profitable & Expanding"] },
+    { id: "funding", text: "What's your funding strategy?", options: ["Bootstrapping (Self-funded)", "Friends & Family", "Angel Investors", "Venture Capital (VC)", "Crowdfunding (Kickstarter/Indiegogo)", "Government Grants", "Bank Loans", "Corporate Investment", "Revenue-Based Financing"] },
+    { id: "team", text: "What's your current team size?", options: ["Solo Founder", "2-3 Co-founders", "Small Team (4-10)", "Growing Team (11-50)", "Large Team (50+)", "Looking for Co-founder", "Hiring Currently"] },
+    { id: "marketing", text: "How do you plan to acquire customers?", options: ["Content Marketing (Blog/SEO)", "Social Media Marketing", "Paid Advertising (Google/Facebook)", "Referral Programs", "Partnerships & Affiliates", "Sales Team/Outbound", "PR & Media Coverage", "Community Building", "Influencer Marketing"] },
+    { id: "challenges", text: "What's your biggest current challenge?", options: ["Product Development/Technical", "Customer Acquisition/Marketing", "Team Building/Hiring", "Funding/Capital", "Competition/Market Saturation", "Scaling/Operations", "Legal/Regulatory", "Product-Market Fit"] },
+    { id: "competitiveAdvantage", text: "What's your unique competitive advantage?", options: ["Superior Technology/IP", "Better User Experience", "Lower Cost Structure", "Strong Brand/Network Effects", "Exclusive Partnerships", "First Mover Advantage", "Data/AI Advantage", "Exceptional Customer Support"] },
+    { id: "timeline", text: "What's your target timeline to launch?", options: ["Within 1 month", "Within 3 months", "Within 6 months", "Within 1 year", "Already Launched", "Flexible/Research Phase"] },
+    { id: "exitStrategy", text: "What's your long-term vision?", options: ["Build a sustainable independent company", "Acquisition by larger company", "IPO/Public Listing", "Merge with competitor", "Franchise/Expand globally", "Not sure yet"] }
+  ];
+  
+  let currentQuestionIndex = 0;
+  let answers = {};
+  let rawIdea = "";
+  
+  function startQuestionnaire() {
+    rawIdea = document.getElementById('rawIdeaInput').value.trim();
+    if(!rawIdea) { alert("Please enter your startup idea first!"); return; }
+    document.getElementById('stepIdea').style.display = 'none';
+    document.getElementById('stepQuestions').style.display = 'block';
+    answers = {};
+    currentQuestionIndex = 0;
+    showQuestion();
+  }
+  
+  function showQuestion() {
+    const container = document.getElementById('questionContainer');
+    const q = questions[currentQuestionIndex];
+    let optionsHtml = '<div class="options-grid">';
+    q.options.forEach(opt => {
+      const isSelected = answers[q.id] === opt;
+      optionsHtml += `<div class="option-btn ${isSelected ? 'selected' : ''}" onclick="selectOption('${q.id}', '${opt.replace(/'/g, "\\'")}')">${opt}</div>`;
+    });
+    optionsHtml += '</div>';
+    container.innerHTML = `
+      <div class="question-card">
+        <h3>${currentQuestionIndex + 1}. ${q.text}</h3>
+        ${optionsHtml}
+      </div>
+    `;
+    updateProgress();
+    updateButtons();
+  }
+  
+  function selectOption(questionId, value) {
+    answers[questionId] = value;
+    const btns = document.querySelectorAll('.option-btn');
+    btns.forEach(btn => {
+      if(btn.innerText === value) btn.classList.add('selected');
+      else btn.classList.remove('selected');
+    });
+    setTimeout(() => { nextQuestion(); }, 300);
+  }
+  
+  function nextQuestion() {
+    const currentQ = questions[currentQuestionIndex];
+    if(!answers[currentQ.id]) { alert("Please select an option before continuing!"); return; }
+    if(currentQuestionIndex < questions.length - 1) {
+      currentQuestionIndex++;
+      showQuestion();
+    } else {
+      document.getElementById('nextBtn').style.display = 'none';
+      document.getElementById('generatePlanBtnPlanner').style.display = 'inline-block';
+    }
+  }
+  
+  function prevQuestion() {
+    if(currentQuestionIndex > 0) {
+      currentQuestionIndex--;
+      showQuestion();
+      document.getElementById('nextBtn').style.display = 'inline-block';
+      document.getElementById('generatePlanBtnPlanner').style.display = 'none';
+    }
+  }
+  
+  function updateProgress() {
+    const progress = ((currentQuestionIndex + 1) / questions.length) * 100;
+    document.getElementById('progressFill').style.width = progress + '%';
+  }
+  
+  function updateButtons() {
+    document.getElementById('prevBtn').style.display = currentQuestionIndex > 0 ? 'inline-block' : 'none';
+    if(currentQuestionIndex === questions.length - 1 && answers[questions[currentQuestionIndex].id]) {
+      document.getElementById('nextBtn').style.display = 'none';
+      document.getElementById('generatePlanBtnPlanner').style.display = 'inline-block';
+    } else {
+      document.getElementById('nextBtn').style.display = 'inline-block';
+      document.getElementById('generatePlanBtnPlanner').style.display = 'none';
+    }
+  }
+  
+  function generateStartupPlan() {
+    const plan = generateComprehensivePlan();
+    document.getElementById('stepQuestions').style.display = 'none';
+    document.getElementById('stepPlan').style.display = 'block';
+    document.getElementById('startupPlan').innerHTML = plan;
+    gsap.fromTo("#startupPlan", { opacity:0, y:30 }, { duration:0.8, opacity:1, y:0 });
+  }
+  
+  function generateComprehensivePlan() {
+    const a = answers;
+    const successScore = Math.floor(Math.random() * 30 + 60);
+    
+    return `
+      <!-- Executive Summary -->
+      <div class="plan-section">
+        <h3><i class="fas fa-rocket"></i> Executive Summary</h3>
+        <div class="plan-card">
+          <p><strong>✨ Your Vision:</strong> ${escapeHtml(rawIdea)}</p>
+          <div class="metric-grid">
+            <div class="metric-box"><div class="metric-number">${successScore}%</div><div>Success Probability</div></div>
+            <div class="metric-box"><div class="metric-number">${a.industry || "—"}</div><div>Industry</div></div>
+            <div class="metric-box"><div class="metric-number">${a.stage || "—"}</div><div>Current Stage</div></div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Problem & Solution -->
+      <div class="plan-section">
+        <h3><i class="fas fa-question-circle"></i> Problem & Solution</h3>
+        <div class="plan-card">
+          <p><strong>🎯 Problem Statement:</strong> ${a.problem || "—"} - Your target audience (${a.targetAudience || "—"}) faces this challenge daily.</p>
+          <p><strong>💡 Your Solution:</strong> A ${a.industry || "technology"} platform that delivers ${a.problem === "Saves time" ? "time savings" : a.problem === "Saves money" ? "cost reduction" : "value"} through innovative technology.</p>
+          <p><strong>🏆 Unique Value Proposition:</strong> Unlike competitors, you offer ${a.competitiveAdvantage || "superior technology"} that makes your solution ${a.competitiveAdvantage === "Lower Cost Structure" ? "more affordable" : "more effective"}.</p>
+        </div>
+      </div>
+      
+      <!-- 90-Day Action Plan -->
+      <div class="plan-section">
+        <h3><i class="fas fa-calendar-week"></i> 90-Day Launch Plan</h3>
+        <div class="timeline-item"><div class="timeline-month"><i class="fas fa-rocket"></i> Days 1-30:</div><div><strong>Foundation & Validation</strong><br>• Conduct 50+ customer discovery interviews<br>• Create landing page with waitlist signup<br>• Define MVP feature set (focus on ONE core value)<br>• Register domain, set up social media<br>• Build email list of potential users<br>• Create investor pitch deck draft</div></div>
+        <div class="timeline-item"><div class="timeline-month"><i class="fas fa-code"></i> Days 31-60:</div><div><strong>MVP Development</strong><br>• Build functional prototype (use no-code tools if possible)<br>• Onboard 10-20 beta testers<br>• Collect and iterate based on feedback<br>• Start content marketing (3 blog posts/week)<br>• Set up analytics (Google Analytics, Mixpanel)<br>• Refine pricing strategy</div></div>
+        <div class="timeline-item"><div class="timeline-month"><i class="fas fa-chart-line"></i> Days 61-90:</div><div><strong>Launch & Scale</strong><br>• Official public launch<br>• Target: 100+ users in first month<br>• Implement referral program<br>• Track key metrics: CAC, LTV, Churn<br>• Pitch to ${a.funding === "Bootstrapping" ? "early customers" : a.funding === "Venture Capital" ? "investors" : "potential partners"}<br>• Prepare for next funding round</div></div>
+      </div>
+      
+      <!-- Customer Acquisition Strategy -->
+      <div class="plan-section">
+        <h3><i class="fas fa-users"></i> Customer Acquisition & Management</h3>
+        <div class="plan-card">
+          <h4>📢 Acquisition Channels:</h4>
+          <ul class="task-list">
+            <li><i class="fas fa-check-circle"></i> <strong>${a.marketing || "Content Marketing"}:</strong> Create valuable content targeting your ${a.targetAudience || "audience"}</li>
+            <li><i class="fas fa-check-circle"></i> <strong>Social Media:</strong> LinkedIn for B2B, Instagram/TikTok for B2C engagement</li>
+            <li><i class="fas fa-check-circle"></i> <strong>Paid Advertising:</strong> Start with $500-1000/month test budget</li>
+            <li><i class="fas fa-check-circle"></i> <strong>Partnerships:</strong> Collaborate with complementary businesses in ${a.industry || "your industry"}</li>
+            <li><i class="fas fa-check-circle"></i> <strong>Referral Program:</strong> Offer incentives for word-of-mouth growth</li>
+          </ul>
+          <h4 style="margin-top:1.5rem;">👥 Customer Management:</h4>
+          <ul class="task-list">
+            <li><i class="fas fa-check-circle"></i> <strong>CRM Setup:</strong> HubSpot/Pipedrive to track all interactions</li>
+            <li><i class="fas fa-check-circle"></i> <strong>Customer Support:</strong> 24h response time, live chat for premium users</li>
+            <li><i class="fas fa-check-circle"></i> <strong>NPS Surveys:</strong> Monthly to measure satisfaction</li>
+            <li><i class="fas fa-check-circle"></i> <strong>Onboarding Flow:</strong> Automated email sequence for new users</li>
+            <li><i class="fas fa-check-circle"></i> <strong>Community Building:</strong> Slack/Discord group for power users</li>
+          </ul>
+        </div>
+      </div>
+      
+      <!-- Financial Planning -->
+      <div class="plan-section">
+        <h3><i class="fas fa-chart-line"></i> Financial Projections</h3>
+        <div class="plan-card">
+          <div class="metric-grid">
+            <div class="metric-box"><div class="metric-number">${a.businessModel || "Subscription"}</div><div>Revenue Model</div></div>
+            <div class="metric-box"><div class="metric-number">${a.funding || "Bootstrapping"}</div><div>Funding Strategy</div></div>
+            <div class="metric-box"><div class="metric-number">12-18 months</div><div>Break-even Timeline</div></div>
+          </div>
+          <h4 style="margin-top:1rem;">📊 Revenue Projections:</h4>
+          <ul class="task-list">
+            <li><i class="fas fa-dollar-sign"></i> <strong>Month 3:</strong> $5,000 - $10,000 MRR</li>
+            <li><i class="fas fa-dollar-sign"></i> <strong>Month 6:</strong> $25,000 - $50,000 MRR</li>
+            <li><i class="fas fa-dollar-sign"></i> <strong>Month 12:</strong> $100,000 - $200,000 MRR</li>
+            <li><i class="fas fa-dollar-sign"></i> <strong>Year 2:</strong> $500,000+ MRR</li>
+          </ul>
+          <h4 style="margin-top:1rem;">💰 Cost Structure:</h4>
+          <ul class="task-list">
+            <li><i class="fas fa-chart-simple"></i> Development: $5,000-15,000/month</li>
+            <li><i class="fas fa-chart-simple"></i> Marketing: $3,000-10,000/month</li>
+            <li><i class="fas fa-chart-simple"></i> Operations: $2,000-5,000/month</li>
+            <li><i class="fas fa-chart-simple"></i> Team: $10,000-30,000/month</li>
+          </ul>
+        </div>
+      </div>
+      
+      <!-- Milestones & KPIs -->
+      <div class="plan-section">
+        <h3><i class="fas fa-flag-checkered"></i> Key Milestones & KPIs</h3>
+        <div class="grid-2col" style="grid-template-columns:repeat(2,1fr); gap:1rem;">
+          <div class="plan-card"><strong>Month 1:</strong><br>• 100 waitlist signups<br>• 50 customer interviews<br>• MVP design complete</div>
+          <div class="plan-card"><strong>Month 3:</strong><br>• MVP launched<br>• 500 active users<br>• $5K MRR</div>
+          <div class="plan-card"><strong>Month 6:</strong><br>• 2,000 users<br>• $25K MRR<br>• <10% churn</div>
+          <div class="plan-card"><strong>Month 12:</strong><br>• 10,000 users<br>• $100K MRR<br>• Positive unit economics</div>
+        </div>
+        <div class="plan-card" style="margin-top:1rem;">
+          <h4>📈 Key Performance Indicators to Track:</h4>
+          <ul class="task-list">
+            <li><i class="fas fa-chart-line"></i> Customer Acquisition Cost (CAC) - Target: < $${a.businessModel === "Subscription" ? "100" : "50"}</li>
+            <li><i class="fas fa-chart-line"></i> Lifetime Value (LTV) - Target: > $${a.businessModel === "Subscription" ? "500" : "200"}</li>
+            <li><i class="fas fa-chart-line"></i> Churn Rate - Target: < 5% monthly</li>
+            <li><i class="fas fa-chart-line"></i> Net Promoter Score (NPS) - Target: > 50</li>
+            <li><i class="fas fa-chart-line"></i> Monthly Recurring Revenue (MRR) Growth - Target: > 20% MoM</li>
+          </ul>
+        </div>
+      </div>
+      
+      <!-- Team & Hiring Plan -->
+      <div class="plan-section">
+        <h3><i class="fas fa-users"></i> Team & Hiring Roadmap</h3>
+        <div class="plan-card">
+          <p><strong>Current Team:</strong> ${a.team || "Solo Founder"}</p>
+          <p><strong>Key Roles Needed:</strong></p>
+          <ul class="task-list">
+            <li><i class="fas fa-user-plus"></i> <strong>Month 1-3:</strong> Technical co-founder/CTO (if technical product), UI/UX designer</li>
+            <li><i class="fas fa-user-plus"></i> <strong>Month 3-6:</strong> Marketing lead, Sales representative</li>
+            <li><i class="fas fa-user-plus"></i> <strong>Month 6-12:</strong> Customer success manager, Full-stack developers</li>
+            <li><i class="fas fa-user-plus"></i> <strong>Year 2:</strong> Operations manager, Product manager, Growth team</li>
+          </ul>
+          <p><strong>Advisory Board:</strong> Consider adding industry experts from ${a.industry || "your industry"} for credibility and connections.</p>
+        </div>
+      </div>
+      
+      <!-- Risk Assessment -->
+      <div class="plan-section">
+        <h3><i class="fas fa-exclamation-triangle"></i> Risk Assessment & Mitigation</h3>
+        <div class="plan-card">
+          <p><strong>⚠️ Primary Risk:</strong> ${a.challenges || "Product-market fit"}</p>
+          <p><strong>🛡️ Mitigation Strategies:</strong></p>
+          <ul class="task-list">
+            <li><i class="fas fa-shield-alt"></i> <strong>Market Risk:</strong> Validate with 50+ customer interviews before full development</li>
+            <li><i class="fas fa-shield-alt"></i> <strong>Technical Risk:</strong> Build MVP with no-code tools first, test with real users</li>
+            <li><i class="fas fa-shield-alt"></i> <strong>Financial Risk:</strong> Maintain 18-24 months runway, track burn rate weekly</li>
+            <li><i class="fas fa-shield-alt"></i> <strong>Competitive Risk:</strong> Monitor competitors monthly, maintain differentiation through ${a.competitiveAdvantage || "unique features"}</li>
+            <li><i class="fas fa-shield-alt"></i> <strong>Team Risk:</strong> Document processes, create clear role definitions</li>
+          </ul>
+        </div>
+      </div>
+      
+      <!-- AI Recommendations -->
+      <div class="plan-section">
+        <h3><i class="fas fa-brain"></i> AI-Powered Strategic Recommendations</h3>
+        <div class="plan-card">
+          <p>✓ <strong>Immediate Next Step:</strong> Create a one-page pitch and validate with 10 potential customers this week</p>
+          <p>✓ <strong>Content Strategy:</strong> Start a blog focused on ${a.industry || "your industry"} insights to build authority</p>
+          <p>✓ <strong>Networking:</strong> Join ${a.industry || "industry-specific"} Slack communities and LinkedIn groups</p>
+          <p>✓ <strong>${a.funding === "Bootstrapping" ? "Revenue Focus" : "Investor Prep"}:</strong> ${a.funding === "Bootstrapping" ? "Focus on generating revenue within 3 months" : "Create detailed financial projections for investor meetings"}</p>
+          <p>✓ <strong>Success Probability:</strong> ${successScore}% with current strategy. Increase by 15% by completing customer interviews this month.</p>
+        </div>
+      </div>
+    `;
+  }
+  
+  function resetPlanner() {
+    document.getElementById('stepPlan').style.display = 'none';
+    document.getElementById('stepIdea').style.display = 'block';
+    document.getElementById('rawIdeaInput').value = '';
+    answers = {};
+    currentQuestionIndex = 0;
+  }
+  
+  function downloadPlan() {
+    const planContent = document.getElementById('startupPlan').innerText;
+    const blob = new Blob([`STARTUP PLAN\n\n${planContent}`], { type: 'text/plain' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = 'startup_plan.txt';
+    link.click();
+  }
+  
+  function escapeHtml(text) { 
+    if(!text) return "—";
+    return text.replace(/[&<>]/g, function(m){if(m==='&') return '&amp;'; if(m==='<') return '&lt;'; if(m==='>') return '&gt;'; return m;}); 
+  }
+  
+  // Homepage Charts
+  let competitorChart, industryChart;
+  function updateDashboardWithIdea(idea) {
+    const successProb = Math.min(95, Math.floor(Math.random() * 40 + 45 + (idea.length % 30)));
+    document.getElementById('successPercent').innerText = successProb + "%";
+    document.getElementById('successFill').style.width = successProb + "%";
+    document.getElementById('riskDesc').innerHTML = `Risk Level: ${successProb > 70 ? "Low 🟢" : successProb > 45 ? "Medium 🟡" : "High 🔴"} Risk`;
+    const revStrategies = ["Subscription SaaS", "Transaction Fee", "Enterprise Licensing", "API Service"];
+    document.getElementById('revenueStrategy').innerHTML = revStrategies[idea.length % revStrategies.length];
+    document.getElementById('mvpPlan').innerHTML = ["2-week prototype", "No-code MVP", "Core AI model", "PWA beta"][idea.length % 4];
+    const comps = [{ name:"Market Leader", share:45 }, { name:"Challenger", share:30 }, { name:"You", share:25 }];
+    if(competitorChart) competitorChart.destroy();
+    competitorChart = new Chart(document.getElementById('competitorChart'), { type:'bar', data:{ labels: comps.map(c=>c.name), datasets:[{ label:'Market Share %', data: comps.map(c=>c.share), backgroundColor:'rgba(0,200,255,0.6)' }] }, options:{ responsive:true, maintainAspectRatio:true } });
+    document.getElementById('nlpScore').innerHTML = `Sentiment: ${["Strong Positive 🟢","Promising 🟡","Disruptive 🟢"][idea.length%3]}`;
+    document.getElementById('pitchKeywords').innerHTML = `Keywords: ${idea.split(' ').slice(0,3).join(', ')}, AI-driven, scalable`;
+    document.getElementById('roiProjection').innerHTML = `${(Math.random()*180+40).toFixed(0)}% (3y)`;
+    document.getElementById('burnRate').innerHTML = `$${(Math.random()*80+20).toFixed(0)}k/mo`;
+    document.getElementById('aiPlanOutput').innerHTML = `<strong>✨ Analysis Complete:</strong> ${successProb}% success probability. Next steps: Validate with customers, build MVP in 2 weeks.`;
+  }
+  document.getElementById('generatePlanBtn')?.addEventListener('click', () => { const idea = document.getElementById('ideaInput').value; if(idea) updateDashboardWithIdea(idea); else alert("Enter an idea"); });
+// Function to open stimulator.py
+function openStimulator() {
+  window.open('http://localhost:5001', '_blank');
+}
+
+// Update stimulator button to open external app
+const stimulateBtn = document.getElementById('stimulateBtn');
+if (stimulateBtn) {
+  // Remove old event listener by replacing with clone
+  const newBtn = stimulateBtn.cloneNode(true);
+  stimulateBtn.parentNode.replaceChild(newBtn, stimulateBtn);
+  newBtn.addEventListener('click', function(e) {
+    e.preventDefault();
+    openStimulator();
+  });
+}  
+  // Tab Navigation
+  const tabs = document.querySelectorAll('.nav-item');
+  const homeDiv = document.getElementById('homeContent'), connectionDiv = document.getElementById('connectionContent'), notifDiv = document.getElementById('notificationContent'), plannerDiv = document.getElementById('plannerContent'), postDiv = document.getElementById('postContent'), stimulatorDiv = document.getElementById('stimulatorContent');
+  function hideAllTabs() { homeDiv.style.display = 'none'; connectionDiv.style.display = 'none'; notifDiv.style.display = 'none'; plannerDiv.style.display = 'none'; postDiv.style.display = 'none'; stimulatorDiv.style.display = 'none'; }
+  tabs.forEach(tab => { tab.addEventListener('click', () => { tabs.forEach(t => t.classList.remove('active')); tab.classList.add('active'); const target = tab.getAttribute('data-tab'); hideAllTabs(); if(target === 'home') homeDiv.style.display = 'block'; else if(target === 'connection') connectionDiv.style.display = 'block'; else if(target === 'notification') notifDiv.style.display = 'block'; else if(target === 'planner') plannerDiv.style.display = 'block'; else if(target === 'post') postDiv.style.display = 'block'; else if(target === 'stimulator') stimulatorDiv.style.display = 'block'; }); });
+  hideAllTabs(); homeDiv.style.display = 'block';
+  window.addEventListener('load', () => { document.getElementById('ideaInput').value = "AI app for farmers (precision agronomy)"; updateDashboardWithIdea("AI app for farmers"); });
+</script>
+</body>
+</html>

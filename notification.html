@@ -1,0 +1,701 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>UdyamVerse | AI-Powered Startup Intelligence Platform</title>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { 
+      background: #05050f; 
+      font-family: 'Space Grotesk', sans-serif; 
+      overflow-x: hidden; 
+      color: #eef5ff;
+      min-height: 100vh;
+    }
+    
+    /* Dark cyberpunk gradient background - ORIGINAL */
+    .bg-orb { 
+      position: fixed; 
+      width: 100vw; 
+      height: 100vh; 
+      top: 0; 
+      left: 0; 
+      z-index: -2; 
+      background: radial-gradient(circle at 20% 30%, #0a0a2a, #010105); 
+    }
+    .bg-orb::before { 
+      content: ""; 
+      position: absolute; 
+      width: 100%; 
+      height: 100%; 
+      background: radial-gradient(circle at 70% 60%, rgba(0, 255, 255, 0.08), transparent 60%); 
+      animation: pulseGlow 12s infinite alternate; 
+    }
+    @keyframes pulseGlow { 
+      0% { opacity: 0.3; transform: scale(1);}
+      100% { opacity: 0.8; transform: scale(1.2);} 
+    }
+    
+    canvas#particleCanvas { 
+      position: fixed; 
+      top: 0; 
+      left: 0; 
+      width: 100%; 
+      height: 100%; 
+      z-index: -1; 
+      pointer-events: none; 
+    }
+    
+    .dashboard { 
+      max-width: 1600px; 
+      margin: 0 auto; 
+      padding: 1.5rem 2rem 3rem; 
+      position: relative; 
+      z-index: 2; 
+    }
+    
+    /* Navbar - ORIGINAL STYLE */
+    .nav-bar { 
+      display: flex; 
+      flex-wrap: wrap; 
+      justify-content: space-between; 
+      align-items: center; 
+      margin-bottom: 2.5rem; 
+      padding: 1rem 2rem; 
+      background: rgba(10, 20, 30, 0.55); 
+      backdrop-filter: blur(14px); 
+      border-radius: 70px; 
+      border: 1px solid rgba(0, 255, 255, 0.25); 
+      box-shadow: 0 20px 40px rgba(0,0,0,0.4), 0 0 20px rgba(0,255,255,0.1); 
+    }
+    .logo { 
+      font-size: 1.6rem; 
+      font-weight: 700; 
+      background: linear-gradient(135deg, #aaffff, #4d8eff); 
+      -webkit-background-clip: text; 
+      background-clip: text; 
+      color: transparent; 
+    }
+    .logo i { background: none; color: #4dccff; margin-right: 8px; }
+    .nav-links { display: flex; gap: 0.8rem; flex-wrap: wrap; }
+    .nav-item { 
+      background: rgba(20, 30, 45, 0.6); 
+      backdrop-filter: blur(8px); 
+      padding: 0.6rem 1.5rem; 
+      border-radius: 40px; 
+      font-weight: 500; 
+      cursor: pointer; 
+      transition: all 0.3s; 
+      border: 1px solid rgba(80, 180, 255, 0.2); 
+      color: #eef5ff;
+    }
+    .nav-item i { margin-right: 8px; }
+    .nav-item:hover, .nav-item.active { 
+      background: linear-gradient(95deg, #0f2b3d, #0a1a2c); 
+      border-color: #3effea; 
+      box-shadow: 0 0 14px rgba(62, 255, 234, 0.4); 
+      transform: translateY(-3px); 
+    }
+    
+    /* Hero Card - ORIGINAL STYLE */
+    .hero-card { 
+      background: rgba(8, 18, 28, 0.65); 
+      backdrop-filter: blur(16px); 
+      border-radius: 2.5rem; 
+      padding: 2rem; 
+      margin-bottom: 2.5rem; 
+      border: 1px solid rgba(0, 230, 230, 0.4); 
+      box-shadow: 0 25px 45px -12px black; 
+    }
+    .glow-text { 
+      font-size: 2rem; 
+      font-weight: 700; 
+      background: linear-gradient(125deg, #FFFFFF, #7df9ff, #3a86ff); 
+      -webkit-background-clip: text; 
+      background-clip: text; 
+      color: transparent; 
+      margin-bottom: 1rem; 
+      display: flex; 
+      align-items: center; 
+      gap: 15px; 
+      flex-wrap: wrap; 
+    }
+    .gen-btn { 
+      background: linear-gradient(95deg, #00c9ff, #5e2aff); 
+      border: none; 
+      padding: 0.8rem 2rem; 
+      border-radius: 60px; 
+      font-weight: bold; 
+      color: white; 
+      cursor: pointer; 
+      transition: 0.2s; 
+      font-family: inherit; 
+    }
+    .gen-btn:hover { 
+      transform: scale(1.02); 
+      box-shadow: 0 0 20px #00ddff; 
+    }
+    
+    @media (max-width: 1000px) { 
+      .dashboard { padding: 1rem; } 
+      .glow-text { font-size: 1.5rem; } 
+    }
+    footer { text-align: center; margin-top: 3rem; opacity: 0.6; font-size: 0.8rem; color: #7f8fa4; }
+    
+    /* ========= NOTIFICATION STYLES - ONLY CYAN/BLUE/TEAL COLORS ========= */
+    .notification-stats {
+      display: flex;
+      gap: 1.5rem;
+      margin-bottom: 2rem;
+      flex-wrap: wrap;
+    }
+    .stat-card {
+      background: rgba(0, 0, 0, 0.4);
+      border-radius: 1.5rem;
+      padding: 1.2rem 2rem;
+      flex: 1;
+      min-width: 150px;
+      text-align: center;
+      border: 1px solid rgba(0, 255, 255, 0.3);
+      backdrop-filter: blur(8px);
+    }
+    .stat-number {
+      font-size: 2.2rem;
+      font-weight: 800;
+      background: linear-gradient(135deg, #fff, #00ffff);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+    .stat-label { font-size: 0.85rem; opacity: 0.7; margin-top: 5px; color: #a0b3d9; }
+    .filter-bar {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+    .filter-btn {
+      background: rgba(20, 30, 45, 0.7);
+      border: 1px solid rgba(0, 200, 255, 0.4);
+      padding: 0.5rem 1.2rem;
+      border-radius: 40px;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-size: 0.85rem;
+      color: #cbd5e6;
+    }
+    .filter-btn.active, .filter-btn:hover {
+      background: #00c9ff;
+      border-color: #00c9ff;
+      color: #000;
+      font-weight: bold;
+    }
+    .notifications-list {
+      max-height: 550px;
+      overflow-y: auto;
+      padding-right: 0.5rem;
+    }
+    .notifications-list::-webkit-scrollbar { width: 5px; }
+    .notifications-list::-webkit-scrollbar-track { background: #1a1a2e; border-radius: 10px; }
+    .notifications-list::-webkit-scrollbar-thumb { background: #00c9ff; border-radius: 10px; }
+    .notification-item {
+      background: rgba(12, 22, 35, 0.7);
+      backdrop-filter: blur(8px);
+      border-radius: 1.2rem;
+      padding: 1.2rem;
+      margin-bottom: 1rem;
+      border-left: 4px solid #00c9ff;
+      transition: all 0.3s ease;
+      animation: slideIn 0.4s ease;
+      display: flex;
+      gap: 1rem;
+      align-items: flex-start;
+    }
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateX(-20px); }
+      to { opacity: 1; transform: translateX(0); }
+    }
+    .notification-item:hover { transform: translateX(5px); background: rgba(0, 150, 200, 0.15); border-left-width: 6px; }
+    .notification-icon { font-size: 1.8rem; min-width: 50px; text-align: center; }
+    .notification-icon i { color: #00ddff; }
+    .notification-content { flex: 1; }
+    .notification-title { font-weight: 700; font-size: 1rem; margin-bottom: 5px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; color: #eef5ff; }
+    .notification-badge { 
+      font-size: 0.7rem; 
+      padding: 2px 8px; 
+      border-radius: 30px; 
+      background: rgba(0, 201, 255, 0.2);
+      color: #7df9ff;
+      border: 1px solid rgba(0, 201, 255, 0.3);
+    }
+    .notification-message { font-size: 0.9rem; opacity: 0.85; margin-bottom: 8px; color: #cbd5e6; }
+    .notification-time { font-size: 0.7rem; opacity: 0.5; display: flex; align-items: center; gap: 5px; color: #7f8fa4; }
+    .notification-actions { display: flex; gap: 12px; margin-top: 10px; }
+    .action-btn { 
+      background: none; 
+      border: none; 
+      color: #00c9ff; 
+      cursor: pointer; 
+      font-size: 0.75rem; 
+      transition: 0.2s;
+      padding: 4px 8px;
+      border-radius: 20px;
+    }
+    .action-btn:hover { 
+      color: #7df9ff; 
+      text-shadow: 0 0 5px cyan;
+      background: rgba(0, 201, 255, 0.2);
+    }
+    .empty-notif { text-align: center; padding: 3rem; opacity: 0.6; color: #7f8fa4; }
+    .mark-all-btn { background: rgba(0, 201, 255, 0.2); border: 1px solid #00c9ff; }
+    .pulse-dot { 
+      width: 10px; 
+      height: 10px; 
+      background: #00c9ff; 
+      border-radius: 50%; 
+      display: inline-block; 
+      animation: pulseBlue 1.4s infinite; 
+    }
+    @keyframes pulseBlue { 
+      0% { box-shadow: 0 0 0 0 rgba(0, 201, 255, 0.7);}
+      100% { box-shadow: 0 0 0 8px rgba(0, 201, 255, 0);} 
+    }
+    .toast-message {
+      position: fixed;
+      bottom: 30px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #0f212e;
+      backdrop-filter: blur(20px);
+      padding: 12px 24px;
+      border-radius: 50px;
+      border-left: 4px solid #00c9ff;
+      color: #eef5ff;
+      z-index: 2000;
+      font-size: 0.9rem;
+      box-shadow: 0 0 20px rgba(0,0,0,0.5);
+      animation: fadeUp 0.3s ease;
+    }
+    @keyframes fadeUp {
+      from { opacity: 0; bottom: 0; }
+      to { opacity: 1; bottom: 30px; }
+    }
+    .live-badge {
+      background: linear-gradient(95deg, #00c9ff, #5e2aff);
+      color: white;
+      border-radius: 30px;
+      padding: 0.2rem 0.8rem;
+      font-size: 0.7rem;
+      font-weight: bold;
+      animation: softPulse 1.5s infinite;
+    }
+    @keyframes softPulse { 
+      0% { opacity: 0.8; } 
+      50% { opacity: 1; box-shadow: 0 0 8px rgba(0, 201, 255, 0.5); } 
+      100% { opacity: 0.8; } 
+    }
+    
+    .hero-card p {
+      color: #a0b3d9;
+    }
+  </style>
+</head>
+<body>
+<div class="bg-orb"></div>
+<canvas id="particleCanvas"></canvas>
+
+<div class="dashboard">
+  <div class="nav-bar">
+    <div class="logo"><i class="fas fa-brain"></i> UdyamVerse<span style="color:#7df9ff"></span><span style="font-size:0.8rem;">·AI</span></div>
+    <div class="nav-links" id="navLinks">
+      <div class="nav-item" data-tab="home"><i class="fas fa-home"></i> Homepage</div>
+      <div class="nav-item" data-tab="connection"><i class="fas fa-plug"></i> Connection</div>
+      <div class="nav-item active" data-tab="notification"><i class="fas fa-bell"></i> Notification <span id="unreadBadge" class="pulse-dot" style="margin-left: 6px;"></span></div>
+      <div class="nav-item" data-tab="planner"><i class="fas fa-calendar-alt"></i> Planner</div>
+      <div class="nav-item" data-tab="post"><i class="fas fa-pen-fancy"></i> Post</div>
+      <div class="nav-item" data-tab="stimulator"><i class="fas fa-chart-line"></i> Stimulator</div>
+    </div>
+  </div>
+
+  <!-- HOMEPAGE -->
+  <div id="homeContent" style="display:none;">
+    <div class="hero-card"><div class="glow-text"><i class="fas fa-robot"></i> AI Venture Intelligence</div><p>Switch to Notification tab to see real-time startup alerts and AI insights.</p></div>
+  </div>
+  <div id="connectionContent" style="display:none;" class="hero-card"><h2><i class="fas fa-plug"></i> AI Connect Hub</h2><p>Connect to investor networks, market APIs, and real-time data sources.</p><button class="gen-btn">Connect Now</button></div>
+  
+  <!-- NOTIFICATION PAGE - ONLY CYAN/BLUE/TEAL COLORS -->
+  <div id="notificationContent" style="display:block;">
+    <div class="hero-card">
+      <div class="glow-text">
+        <i class="fas fa-bell"></i> Neural Notification Center
+        <span class="live-badge"><i class="fas fa-sync-alt fa-fw"></i> LIVE FEED</span>
+      </div>
+      <p>Real-time startup alerts, funding updates, competitor moves & AI insights — powered by neural intelligence engine.</p>
+      
+      <!-- Stats Cards -->
+      <div class="notification-stats">
+        <div class="stat-card"><div class="stat-number" id="totalNotifCount">0</div><div class="stat-label">Total Signals</div></div>
+        <div class="stat-card"><div class="stat-number" id="unreadCountDisplay">0</div><div class="stat-label">Unread</div></div>
+        <div class="stat-card"><div class="stat-number" id="highImportanceCount">0</div><div class="stat-label">Priority Alerts</div></div>
+      </div>
+      
+      <!-- Filter & Actions Bar -->
+      <div class="filter-bar">
+        <button class="filter-btn active" data-filter="all"><i class="fas fa-list"></i> All</button>
+        <button class="filter-btn" data-filter="unread"><i class="fas fa-envelope"></i> Unread</button>
+        <button class="filter-btn" data-filter="high"><i class="fas fa-exclamation-triangle"></i> Priority</button>
+        <button class="filter-btn" data-filter="funding"><i class="fas fa-dollar-sign"></i> Funding</button>
+        <button class="filter-btn" data-filter="market"><i class="fas fa-chart-line"></i> Market</button>
+        <button class="filter-btn" data-filter="ai"><i class="fas fa-brain"></i> AI Insight</button>
+        <div style="flex:1"></div>
+        <button id="markAllReadBtn" class="gen-btn mark-all-btn" style="padding: 0.5rem 1.2rem; background: rgba(0, 201, 255, 0.2);"><i class="fas fa-check-double"></i> Mark All Read</button>
+        <button id="fetchAPINotifBtn" class="gen-btn" style="padding: 0.5rem 1.2rem;"><i class="fas fa-cloud-download-alt"></i> Fetch API Data</button>
+      </div>
+      
+      <!-- Notifications Container -->
+      <div id="notificationsContainer" class="notifications-list">
+        <div class="empty-notif"><i class="fas fa-spinner fa-pulse"></i> Initializing neural feed...</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Other Tabs -->
+  <div id="plannerContent" style="display:none;" class="hero-card"><h2><i class="fas fa-calendar-alt"></i> AI Startup Planner</h2><p>Use notification insights to refine your strategic roadmap.</p></div>
+  <div id="postContent" style="display:none;" class="hero-card"><h2><i class="fas fa-pen-fancy"></i> Post & Feedback</h2><textarea rows="4" placeholder="Share your startup idea for AI analysis..." style="width:100%; background:rgba(0,0,0,0.6); border:1px solid #00c9ff; border-radius:1rem; padding:1rem; color:white;"></textarea><button class="gen-btn" style="margin-top:1rem;">Analyze & Get Feedback</button></div>
+  <div id="stimulatorContent" style="display:none;" class="hero-card"><h2><i class="fas fa-chart-line"></i> Market Stimulator</h2><p>Launch the advanced AI-powered market simulation tool.</p><button class="gen-btn">Launch Stimulator</button></div>
+  <footer>⚡ AI Venture Capital Intelligence · Neural Notification Engine · Real-time API Integration</footer>
+</div>
+
+<script>
+  // Particle Background
+  const canvas = document.getElementById('particleCanvas');
+  const ctx = canvas.getContext('2d');
+  let width = window.innerWidth, height = window.innerHeight;
+  let particles = [];
+  const PARTICLE_COUNT = 100;
+  
+  function resizeCanvas() { 
+    width = window.innerWidth; 
+    height = window.innerHeight; 
+    canvas.width = width; 
+    canvas.height = height; 
+  }
+  
+  class Particle { 
+    constructor() { 
+      this.x = Math.random() * width; 
+      this.y = Math.random() * height; 
+      this.vx = (Math.random() - 0.5) * 0.4; 
+      this.vy = (Math.random() - 0.5) * 0.3; 
+      this.radius = Math.random() * 2 + 1.2; 
+      this.alpha = Math.random() * 0.5 + 0.2; 
+    } 
+    update() { 
+      this.x += this.vx; 
+      this.y += this.vy; 
+      if (this.x < 0) this.x = width; 
+      if (this.x > width) this.x = 0; 
+      if (this.y < 0) this.y = height; 
+      if (this.y > height) this.y = 0; 
+    } 
+    draw() { 
+      ctx.beginPath(); 
+      ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2); 
+      ctx.fillStyle = `rgba(80, 210, 255, ${this.alpha})`; 
+      ctx.fill(); 
+    } 
+  }
+  
+  function initParticles() { 
+    particles = []; 
+    for (let i = 0; i < PARTICLE_COUNT; i++) particles.push(new Particle()); 
+  }
+  
+  function animateParticles() { 
+    if(!ctx) return; 
+    ctx.clearRect(0, 0, width, height); 
+    for (let p of particles) { p.update(); p.draw(); } 
+    for (let i = 0; i < particles.length; i++) { 
+      for (let j = i+1; j < particles.length; j++) { 
+        const dx = particles[i].x - particles[j].x, dy = particles[i].y - particles[j].y, dist = Math.hypot(dx, dy); 
+        if (dist < 120) { 
+          ctx.beginPath(); 
+          ctx.moveTo(particles[i].x, particles[i].y); 
+          ctx.lineTo(particles[j].x, particles[j].y); 
+          ctx.strokeStyle = `rgba(0, 200, 255, ${0.15 * (1 - dist/120)})`; 
+          ctx.stroke(); 
+        } 
+      } 
+    } 
+    requestAnimationFrame(animateParticles); 
+  }
+  
+  resizeCanvas(); 
+  initParticles(); 
+  animateParticles();
+  window.addEventListener('resize', () => { resizeCanvas(); initParticles(); });
+
+  // NOTIFICATION SYSTEM
+  let notifications = [];
+  let currentFilter = "all";
+  
+  function genId() { return Date.now() + '-' + Math.random().toString(36).substr(2, 8); }
+  
+  function timeAgo(date) {
+    const seconds = Math.floor((new Date() - date) / 1000);
+    if (seconds < 60) return `${seconds} sec ago`;
+    const mins = Math.floor(seconds / 60);
+    if (mins < 60) return `${mins} min ago`;
+    const hours = Math.floor(mins / 60);
+    if (hours < 24) return `${hours} hour ago`;
+    const days = Math.floor(hours / 24);
+    return `${days} day ago`;
+  }
+  
+  function showToast(message, duration = 3000) {
+    const existing = document.querySelector('.toast-message');
+    if(existing) existing.remove();
+    const toast = document.createElement('div');
+    toast.className = 'toast-message';
+    toast.innerHTML = `<i class="fas fa-bell"></i> ${message}`;
+    document.body.appendChild(toast);
+    setTimeout(() => toast.remove(), duration);
+  }
+  
+  function escapeHtml(str) { 
+    if(!str) return ''; 
+    return str.replace(/[&<>]/g, function(m){ 
+      if(m==='&') return '&amp;'; 
+      if(m==='<') return '&lt;'; 
+      if(m==='>') return '&gt;'; 
+      return m;
+    }); 
+  }
+  
+  function renderNotifications() {
+    const container = document.getElementById('notificationsContainer');
+    if(!container) return;
+    
+    let filtered = [...notifications];
+    if(currentFilter === 'unread') filtered = filtered.filter(n => !n.read);
+    else if(currentFilter === 'high') filtered = filtered.filter(n => n.priority === 'high');
+    else if(currentFilter === 'funding') filtered = filtered.filter(n => n.category === 'funding');
+    else if(currentFilter === 'market') filtered = filtered.filter(n => n.category === 'market');
+    else if(currentFilter === 'ai') filtered = filtered.filter(n => n.category === 'ai');
+    
+    if(filtered.length === 0) {
+      container.innerHTML = `<div class="empty-notif"><i class="fas fa-inbox"></i> No intelligence signals in this category.</div>`;
+      updateStats();
+      return;
+    }
+    
+    container.innerHTML = filtered.map(notif => `
+      <div class="notification-item" style="opacity: ${notif.read ? 0.7 : 1};">
+        <div class="notification-icon">
+          <i class="${notif.icon}"></i>
+        </div>
+        <div class="notification-content">
+          <div class="notification-title">
+            <strong>${escapeHtml(notif.title)}</strong>
+            ${!notif.read ? '<span class="notification-badge">NEW</span>' : ''}
+            ${notif.priority === 'high' ? '<span class="notification-badge">PRIORITY</span>' : ''}
+            <span class="notification-badge">${notif.category.toUpperCase()}</span>
+          </div>
+          <div class="notification-message">${escapeHtml(notif.message)}</div>
+          <div class="notification-time"><i class="far fa-clock"></i> ${timeAgo(notif.timestamp)}</div>
+          <div class="notification-actions">
+            ${!notif.read ? `<button class="action-btn" onclick="markAsRead('${notif.id}')"><i class="fas fa-check-circle"></i> Mark Read</button>` : ''}
+            <button class="action-btn" onclick="deleteNotification('${notif.id}')"><i class="fas fa-trash-alt"></i> Dismiss</button>
+            <button class="action-btn" onclick="viewDetails('${notif.id}')"><i class="fas fa-external-link-alt"></i> Details</button>
+          </div>
+        </div>
+      </div>
+    `).join('');
+    updateStats();
+  }
+  
+  function updateStats() {
+    const total = notifications.length;
+    const unread = notifications.filter(n => !n.read).length;
+    const high = notifications.filter(n => n.priority === 'high').length;
+    document.getElementById('totalNotifCount').innerText = total;
+    document.getElementById('unreadCountDisplay').innerText = unread;
+    document.getElementById('highImportanceCount').innerText = high;
+    const badgeSpan = document.getElementById('unreadBadge');
+    if(badgeSpan) badgeSpan.style.display = unread > 0 ? 'inline-block' : 'none';
+  }
+  
+  window.markAsRead = function(id) {
+    const notif = notifications.find(n => n.id === id);
+    if(notif && !notif.read) {
+      notif.read = true;
+      renderNotifications();
+      showToast(`Marked "${notif.title.substring(0, 40)}" as read`);
+    }
+  };
+  
+  window.deleteNotification = function(id) {
+    const idx = notifications.findIndex(n => n.id === id);
+    if(idx !== -1) {
+      const title = notifications[idx].title;
+      notifications.splice(idx, 1);
+      renderNotifications();
+      showToast(`Signal dismissed: ${title.substring(0, 40)}`);
+    }
+  };
+  
+  window.viewDetails = function(id) {
+    const notif = notifications.find(n => n.id === id);
+    if(notif) {
+      alert(`📡 ${notif.title}\n\n${notif.message}\n\nCategory: ${notif.category}\nPriority: ${notif.priority}\nTime: ${notif.timestamp.toLocaleString()}`);
+    }
+  };
+  
+  function markAllRead() {
+    let changed = false;
+    notifications.forEach(n => { if(!n.read) { n.read = true; changed = true; } });
+    if(changed) {
+      renderNotifications();
+      showToast("✅ All intelligence signals marked as read");
+    } else {
+      showToast("No unread signals");
+    }
+  }
+  
+  // API Simulation - All using cyan/blue colors only
+  async function simulateFundingAPI() {
+    return new Promise(resolve => {
+      setTimeout(() => {
+        const mockFunding = [
+          { title: "💰 $2.5M Seed Round for AI AgTech", message: "Competitor in precision farming raised $2.5M. Investors eyeing sustainability tech sector.", category: "funding", priority: "high", icon: "fas fa-chart-line" },
+          { title: "🏆 Y Combinator Winter 2025 Applications Open", message: "Early-stage startups: apply before Dec 15. AI & climate tech prioritized.", category: "funding", priority: "medium", icon: "fas fa-rocket" },
+          { title: "📊 Grant Opportunity: EU Horizon €50k", message: "Green innovation grant available for startups with carbon reduction models.", category: "funding", priority: "medium", icon: "fas fa-euro-sign" }
+        ];
+        resolve(mockFunding.map(item => ({ id: genId(), ...item, timestamp: new Date(Date.now() - Math.random() * 3600000), read: false })));
+      }, 200);
+    });
+  }
+  
+  async function simulateMarketAPI() {
+    return new Promise(resolve => {
+      setTimeout(() => {
+        const marketAlerts = [
+          { title: "📉 Market Shift: SaaS multiples adjustment", message: "Public SaaS companies trading patterns shifting. Focus on profitability metrics for valuation.", category: "market", priority: "high", icon: "fas fa-chart-simple" },
+          { title: "📈 AI Infrastructure Expansion", message: "Hardware and cloud infrastructure investments increasing. Plan scaling strategies.", category: "market", priority: "medium", icon: "fas fa-microchip" },
+          { title: "🌍 Emerging Market: Southeast Asia Digital Economy", message: "Investment in SEA fintech and e-commerce grew significantly. Great expansion opportunity.", category: "market", priority: "low", icon: "fas fa-globe" }
+        ];
+        resolve(marketAlerts.map(item => ({ id: genId(), ...item, timestamp: new Date(Date.now() - Math.random() * 7200000), read: false })));
+      }, 250);
+    });
+  }
+  
+  async function simulateAIInsightAPI() {
+    return new Promise(resolve => {
+      setTimeout(() => {
+        const insights = [
+          { title: "🧠 AI Analysis: Your Venture Score +12%", message: "Based on latest NLP sentiment, your pitch matches high-growth startup patterns.", category: "ai", priority: "medium", icon: "fas fa-brain" },
+          { title: "⚡ Competitor Watch: New entrant detected", message: "AI detected a stealth startup targeting similar customer segment. Differentiate via unique value prop.", category: "ai", priority: "high", icon: "fas fa-eye" },
+          { title: "📝 Pitch Deck Optimizer Ready", message: "New AI tool launched: analyze your deck against top 100 funded startups globally.", category: "ai", priority: "low", icon: "fas fa-file-powerpoint" }
+        ];
+        resolve(insights.map(item => ({ id: genId(), ...item, timestamp: new Date(Date.now() - Math.random() * 5400000), read: false })));
+      }, 180);
+    });
+  }
+  
+  async function fetchExternalNotifications() {
+    showToast("🌐 Fetching latest market & funding data from AI neural APIs...", 2000);
+    try {
+      const [fundingData, marketData, aiInsightData] = await Promise.all([
+        simulateFundingAPI(),
+        simulateMarketAPI(),
+        simulateAIInsightAPI()
+      ]);
+      const newNotifications = [...fundingData, ...marketData, ...aiInsightData];
+      let addedCount = 0;
+      for(const newNotif of newNotifications) {
+        const exists = notifications.some(n => n.title === newNotif.title && n.message === newNotif.message);
+        if(!exists) {
+          notifications.unshift(newNotif);
+          addedCount++;
+          if(Notification.permission === "granted" && newNotif.priority === 'high') {
+            new Notification(newNotif.title, { body: newNotif.message });
+          }
+        }
+      }
+      if(addedCount > 0) {
+        renderNotifications();
+        showToast(`📡 ${addedCount} new intelligence signals from AI data streams!`, 3000);
+      } else {
+        showToast("All API data already in neural feed.", 1500);
+      }
+    } catch(err) {
+      console.error(err);
+      showToast("API fetch error, using cached intelligence", 2000);
+    }
+  }
+  
+  function loadInitialNotifications() {
+    const baseNotifs = [
+      { title: "🚀 Welcome to UdyamVerse Neural Network", message: "You're now connected to real-time startup intelligence. Notifications will keep you ahead of the curve.", category: "ai", priority: "medium", icon: "fas fa-hand-peace", timeOffset: 2 },
+      { title: "📢 New Feature: AI Competitor Radar v2.0", message: "Monitor competitor funding, hiring, and product launches automatically with enhanced neural detection.", category: "ai", priority: "low", icon: "fas fa-radar", timeOffset: 5 },
+      { title: "🔥 Funding Alert: $10M Series A for AI ClimateTech", message: "Similar industry startup just closed a round — strong validation for sustainability tech vertical.", category: "funding", priority: "high", icon: "fas fa-fire", timeOffset: 8 },
+      { title: "📊 Market Pulse: Investor Interest in Generative AI surges", message: "Venture capitalists are deploying massive capital into generative AI solutions across all stages.", category: "market", priority: "high", icon: "fas fa-chart-line", timeOffset: 12 }
+    ];
+    notifications = baseNotifs.map((n, idx) => ({
+      id: genId(),
+      title: n.title,
+      message: n.message,
+      category: n.category,
+      priority: n.priority,
+      icon: n.icon,
+      timestamp: new Date(Date.now() - (n.timeOffset || idx+1) * 3600000),
+      read: false
+    }));
+    renderNotifications();
+  }
+  
+  function requestNotificationPerm() {
+    if ("Notification" in window && Notification.permission !== "denied" && Notification.permission !== "granted") {
+      Notification.requestPermission();
+    }
+  }
+  
+  let autoRefreshInterval;
+  function startAutoRefresh() {
+    if(autoRefreshInterval) clearInterval(autoRefreshInterval);
+    autoRefreshInterval = setInterval(() => {
+      fetchExternalNotifications();
+    }, 45000);
+  }
+  
+  // Tab Navigation
+  const tabs = document.querySelectorAll('.nav-item');
+  const homeDiv = document.getElementById('homeContent'), connectionDiv = document.getElementById('connectionContent'), notifDiv = document.getElementById('notificationContent'), plannerDiv = document.getElementById('plannerContent'), postDiv = document.getElementById('postContent'), stimulatorDiv = document.getElementById('stimulatorContent');
+  function hideAllTabs() { homeDiv.style.display = 'none'; connectionDiv.style.display = 'none'; notifDiv.style.display = 'none'; plannerDiv.style.display = 'none'; postDiv.style.display = 'none'; stimulatorDiv.style.display = 'none'; }
+  tabs.forEach(tab => { tab.addEventListener('click', () => { tabs.forEach(t => t.classList.remove('active')); tab.classList.add('active'); const target = tab.getAttribute('data-tab'); hideAllTabs(); if(target === 'home') homeDiv.style.display = 'block'; else if(target === 'connection') connectionDiv.style.display = 'block'; else if(target === 'notification') notifDiv.style.display = 'block'; else if(target === 'planner') plannerDiv.style.display = 'block'; else if(target === 'post') postDiv.style.display = 'block'; else if(target === 'stimulator') stimulatorDiv.style.display = 'block'; }); });
+  hideAllTabs(); notifDiv.style.display = 'block'; document.querySelector('.nav-item[data-tab="notification"]').classList.add('active');
+  
+  // Filter buttons
+  document.querySelectorAll('.filter-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      currentFilter = btn.getAttribute('data-filter');
+      renderNotifications();
+    });
+  });
+  document.getElementById('markAllReadBtn')?.addEventListener('click', markAllRead);
+  document.getElementById('fetchAPINotifBtn')?.addEventListener('click', fetchExternalNotifications);
+  
+  // Initialize
+  loadInitialNotifications();
+  requestNotificationPerm();
+  startAutoRefresh();
+  setTimeout(() => fetchExternalNotifications(), 2000);
+</script>
+</body>
+</html>

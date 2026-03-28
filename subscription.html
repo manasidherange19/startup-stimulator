@@ -1,0 +1,916 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>UdyamVerse | AI-Powered Startup Intelligence Platform</title>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Space Grotesk', sans-serif;
+      background: #05050f;
+      color: #eef5ff;
+      overflow-x: hidden;
+      min-height: 100vh;
+    }
+
+    /* Background Animation - Same as Dashboard */
+    .bg-orb {
+      position: fixed;
+      width: 100vw;
+      height: 100vh;
+      top: 0;
+      left: 0;
+      z-index: -2;
+      background: radial-gradient(circle at 20% 30%, #0a0a2a, #010105);
+    }
+
+    .bg-orb::before {
+      content: "";
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      background: radial-gradient(circle at 70% 60%, rgba(0, 255, 255, 0.08), transparent 60%);
+      animation: pulseGlow 12s infinite alternate;
+    }
+
+    @keyframes pulseGlow {
+      0% { opacity: 0.3; transform: scale(1);}
+      100% { opacity: 0.8; transform: scale(1.2);}
+    }
+
+    canvas#particleCanvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: -1;
+      pointer-events: none;
+    }
+
+    /* Navigation Bar */
+    .nav-bar {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      margin: 1.5rem 2rem;
+      padding: 1rem 2rem;
+      background: rgba(10, 20, 30, 0.55);
+      backdrop-filter: blur(14px);
+      border-radius: 70px;
+      border: 1px solid rgba(0, 255, 255, 0.25);
+      box-shadow: 0 20px 40px rgba(0,0,0,0.4), 0 0 20px rgba(0,255,255,0.1);
+    }
+
+    .logo {
+      font-size: 1.6rem;
+      font-weight: 700;
+      background: linear-gradient(135deg, #aaffff, #4d8eff);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+
+    .logo i {
+      background: none;
+      color: #4dccff;
+      margin-right: 8px;
+    }
+
+    .back-btn {
+      background: rgba(20, 30, 45, 0.6);
+      backdrop-filter: blur(8px);
+      padding: 0.6rem 1.5rem;
+      border-radius: 40px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.3s;
+      border: 1px solid rgba(80, 180, 255, 0.2);
+      color: white;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .back-btn:hover {
+      background: linear-gradient(95deg, #0f2b3d, #0a1a2c);
+      border-color: #3effea;
+      box-shadow: 0 0 14px rgba(62, 255, 234, 0.4);
+      transform: translateY(-3px);
+    }
+
+    /* Main Container */
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+
+    /* Header Section */
+    .header-section {
+      text-align: center;
+      margin-bottom: 3rem;
+    }
+
+    .glow-text {
+      font-size: 3rem;
+      font-weight: 700;
+      background: linear-gradient(125deg, #FFFFFF, #7df9ff, #3a86ff);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      margin-bottom: 1rem;
+    }
+
+    .subtitle {
+      font-size: 1.1rem;
+      color: #94a3b8;
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    /* Billing Toggle */
+    .billing-toggle {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 1rem;
+      margin-bottom: 3rem;
+    }
+
+    .toggle-option {
+      font-size: 1rem;
+      font-weight: 500;
+      color: #94a3b8;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .toggle-option.active {
+      color: #5ee0fa;
+    }
+
+    .toggle-switch {
+      width: 60px;
+      height: 30px;
+      background: rgba(20, 30, 45, 0.6);
+      border-radius: 30px;
+      position: relative;
+      cursor: pointer;
+      border: 1px solid rgba(0, 255, 255, 0.3);
+      transition: all 0.3s;
+    }
+
+    .toggle-slider {
+      width: 26px;
+      height: 26px;
+      background: linear-gradient(95deg, #00c9ff, #5e2aff);
+      border-radius: 50%;
+      position: absolute;
+      top: 1px;
+      left: 2px;
+      transition: transform 0.3s;
+    }
+
+    .toggle-switch.active .toggle-slider {
+      transform: translateX(30px);
+    }
+
+    .save-badge {
+      background: linear-gradient(95deg, #00ffaa33, #00c9ff33);
+      padding: 0.3rem 0.8rem;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      color: #5ee0fa;
+      margin-left: 0.5rem;
+    }
+
+    /* Pricing Cards Grid */
+    .pricing-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 2rem;
+      margin-bottom: 4rem;
+    }
+
+    /* Pricing Card */
+    .pricing-card {
+      background: rgba(12, 22, 35, 0.65);
+      backdrop-filter: blur(12px);
+      border-radius: 1.8rem;
+      padding: 2rem;
+      border: 1px solid rgba(0, 255, 255, 0.2);
+      transition: all 0.35s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .pricing-card:hover {
+      transform: translateY(-10px);
+      border-color: cyan;
+      box-shadow: 0 20px 40px rgba(0, 255, 255, 0.1);
+    }
+
+    .pricing-card.popular {
+      border: 2px solid #5ee0fa;
+      box-shadow: 0 0 30px rgba(94, 224, 250, 0.2);
+    }
+
+    .pricing-card.free-plan {
+      background: rgba(12, 22, 35, 0.5);
+      border: 1px solid rgba(45, 212, 191, 0.3);
+    }
+
+    .popular-badge {
+      position: absolute;
+      top: 1rem;
+      right: 1rem;
+      background: linear-gradient(95deg, #00c9ff, #5e2aff);
+      padding: 0.3rem 1rem;
+      border-radius: 20px;
+      font-size: 0.7rem;
+      font-weight: 600;
+    }
+
+    .free-badge {
+      position: absolute;
+      top: 1rem;
+      right: 1rem;
+      background: rgba(45, 212, 191, 0.2);
+      border: 1px solid #2dd4bf;
+      padding: 0.3rem 1rem;
+      border-radius: 20px;
+      font-size: 0.7rem;
+      font-weight: 600;
+      color: #2dd4bf;
+    }
+
+    .plan-icon {
+      font-size: 3rem;
+      margin-bottom: 1rem;
+    }
+
+    .plan-name {
+      font-size: 1.8rem;
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+    }
+
+    .plan-price {
+      margin: 1.5rem 0;
+    }
+
+    .price-amount {
+      font-size: 3rem;
+      font-weight: 800;
+      color: #5ee0fa;
+    }
+
+    .price-period {
+      font-size: 1rem;
+      color: #94a3b8;
+    }
+
+    .free-price {
+      font-size: 3rem;
+      font-weight: 800;
+      color: #2dd4bf;
+    }
+
+    .plan-description {
+      color: #94a3b8;
+      margin-bottom: 1.5rem;
+      line-height: 1.5;
+    }
+
+    /* Features List */
+    .features-list {
+      list-style: none;
+      margin: 1.5rem 0;
+    }
+
+    .features-list li {
+      padding: 0.6rem 0;
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .features-list li i {
+      color: #2dd4bf;
+      font-size: 1rem;
+      width: 20px;
+    }
+
+    .features-list li.disabled {
+      opacity: 0.4;
+    }
+
+    .features-list li.disabled i {
+      color: #64748b;
+    }
+
+    .features-list li.highlight {
+      color: #5ee0fa;
+    }
+
+    /* Subscribe Button */
+    .subscribe-btn {
+      width: 100%;
+      padding: 1rem;
+      background: linear-gradient(95deg, #0f4c5c, #2c3e66);
+      border: none;
+      border-radius: 2rem;
+      font-weight: 700;
+      font-size: 1rem;
+      color: white;
+      cursor: pointer;
+      transition: all 0.25s;
+      font-family: inherit;
+      margin-top: 1rem;
+    }
+
+    .subscribe-btn:hover {
+      background: linear-gradient(95deg, #1a6d82, #3b4f7a);
+      transform: translateY(-2px);
+      box-shadow: 0 12px 20px -10px rgba(45, 212, 191, 0.4);
+    }
+
+    .subscribe-btn.popular-btn {
+      background: linear-gradient(95deg, #00c9ff, #5e2aff);
+    }
+
+    .subscribe-btn.popular-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 20px -10px rgba(0, 201, 255, 0.5);
+    }
+
+    .subscribe-btn.free-btn {
+      background: rgba(45, 212, 191, 0.2);
+      border: 1px solid #2dd4bf;
+      color: #2dd4bf;
+    }
+
+    .subscribe-btn.free-btn:hover {
+      background: rgba(45, 212, 191, 0.3);
+      transform: translateY(-2px);
+      box-shadow: 0 12px 20px -10px rgba(45, 212, 191, 0.3);
+    }
+
+    /* Comparison Table */
+    .comparison-section {
+      margin-top: 4rem;
+      background: rgba(12, 22, 35, 0.5);
+      backdrop-filter: blur(8px);
+      border-radius: 1.8rem;
+      padding: 2rem;
+      border: 1px solid rgba(0, 255, 255, 0.2);
+    }
+
+    .section-title {
+      text-align: center;
+      font-size: 2rem;
+      font-weight: 700;
+      margin-bottom: 2rem;
+      background: linear-gradient(125deg, #FFFFFF, #7df9ff);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+
+    .comparison-table {
+      overflow-x: auto;
+    }
+
+    .comparison-table table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .comparison-table th,
+    .comparison-table td {
+      padding: 1rem;
+      text-align: center;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .comparison-table th {
+      font-weight: 600;
+      color: #5ee0fa;
+      font-size: 1.1rem;
+    }
+
+    .comparison-table td:first-child {
+      text-align: left;
+      font-weight: 500;
+    }
+
+    .comparison-table tr:hover {
+      background: rgba(94, 224, 250, 0.05);
+    }
+
+    .check-icon {
+      color: #2dd4bf;
+      font-size: 1.2rem;
+    }
+
+    .times-icon {
+      color: #64748b;
+      font-size: 1.2rem;
+    }
+
+    /* FAQ Section */
+    .faq-section {
+      margin-top: 4rem;
+    }
+
+    .faq-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
+      gap: 1.5rem;
+    }
+
+    .faq-item {
+      background: rgba(12, 22, 35, 0.5);
+      backdrop-filter: blur(8px);
+      border-radius: 1rem;
+      padding: 1.5rem;
+      border: 1px solid rgba(0, 255, 255, 0.15);
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .faq-item:hover {
+      border-color: rgba(0, 255, 255, 0.4);
+    }
+
+    .faq-question {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-weight: 600;
+      font-size: 1.1rem;
+    }
+
+    .faq-question i {
+      color: #5ee0fa;
+      transition: transform 0.3s;
+    }
+
+    .faq-answer {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.3s ease;
+      color: #94a3b8;
+      line-height: 1.6;
+      margin-top: 0;
+    }
+
+    .faq-item.active .faq-answer {
+      max-height: 200px;
+      margin-top: 1rem;
+    }
+
+    .faq-item.active .faq-question i {
+      transform: rotate(180deg);
+    }
+
+    /* Trust Badges */
+    .trust-section {
+      text-align: center;
+      margin-top: 4rem;
+      padding: 2rem;
+      background: rgba(12, 22, 35, 0.3);
+      border-radius: 1.5rem;
+    }
+
+    .trust-icons {
+      display: flex;
+      justify-content: center;
+      gap: 3rem;
+      flex-wrap: wrap;
+      margin-top: 1.5rem;
+    }
+
+    .trust-icons i {
+      font-size: 2rem;
+      color: #5ee0fa;
+      opacity: 0.7;
+    }
+
+    /* Footer */
+    footer {
+      text-align: center;
+      margin-top: 4rem;
+      padding: 2rem;
+      opacity: 0.6;
+      font-size: 0.8rem;
+      border-top: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    @media (max-width: 768px) {
+      .nav-bar {
+        margin: 1rem;
+        padding: 0.8rem 1.5rem;
+      }
+      .container {
+        padding: 1rem;
+      }
+      .glow-text {
+        font-size: 2rem;
+      }
+      .pricing-grid {
+        gap: 1rem;
+      }
+      .faq-grid {
+        grid-template-columns: 1fr;
+      }
+      .comparison-table th,
+      .comparison-table td {
+        padding: 0.5rem;
+        font-size: 0.8rem;
+      }
+    }
+  </style>
+</head>
+<body>
+<div class="bg-orb"></div>
+<canvas id="particleCanvas"></canvas>
+
+<!-- Navigation -->
+<nav class="nav-bar">
+  <div class="logo"><i class="fas fa-brain"></i> Udyam<span style="color:#7df9ff">Verse</span><span style="font-size:0.8rem;">·AI</span></div>
+  <a href="homepage.html" class="back-btn"><i class="fas fa-arrow-left"></i> Back to Dashboard</a>
+</nav>
+
+<div class="container">
+  <!-- Header -->
+  <div class="header-section">
+    <h1 class="glow-text">Choose Your Power Plan</h1>
+    <p class="subtitle">Start for free, upgrade as you grow. Unlock AI-powered insights and accelerate your startup journey.</p>
+  </div>
+
+  <!-- Billing Toggle (Only for paid plans) -->
+  <div class="billing-toggle">
+    <span class="toggle-option monthly active">Monthly</span>
+    <div class="toggle-switch" id="billingToggle">
+      <div class="toggle-slider"></div>
+    </div>
+    <span class="toggle-option yearly">Yearly <span class="save-badge">Save 20%</span></span>
+  </div>
+
+  <!-- Pricing Cards -->
+  <div class="pricing-grid" id="pricingGrid">
+    <!-- Free Plan -->
+    <div class="pricing-card free-plan">
+      <div class="free-badge"><i class="fas fa-gift"></i> FOREVER FREE</div>
+      <div class="plan-icon"><i class="fas fa-heart"></i></div>
+      <h2 class="plan-name">Free</h2>
+      <div class="plan-price">
+        <span class="free-price">$0</span>
+        <span class="price-period">/forever</span>
+      </div>
+      <p class="plan-description">Perfect for exploring and validating your startup idea</p>
+      <ul class="features-list">
+        <li><i class="fas fa-check-circle"></i> Basic AI Market Analysis (3/mo)</li>
+        <li><i class="fas fa-check-circle"></i> Competitor Overview</li>
+        <li><i class="fas fa-check-circle"></i> 1 Startup Plan Generation</li>
+        <li><i class="fas fa-check-circle"></i> Community Support</li>
+        <li><i class="fas fa-check-circle"></i> Basic Pitch Feedback</li>
+        <li class="disabled"><i class="fas fa-times-circle"></i> Investor Matching</li>
+        <li class="disabled"><i class="fas fa-times-circle"></i> API Access</li>
+        <li class="disabled"><i class="fas fa-times-circle"></i> Advanced Analytics</li>
+      </ul>
+      <button class="subscribe-btn free-btn" onclick="subscribe('Free')"><i class="fas fa-rocket"></i> Start Free</button>
+    </div>
+
+    <!-- Basic Plan -->
+    <div class="pricing-card">
+      <div class="plan-icon"><i class="fas fa-seedling"></i></div>
+      <h2 class="plan-name">Starter</h2>
+      <div class="plan-price">
+        <span class="price-amount" id="basicPrice">$29</span>
+        <span class="price-period" id="basicPeriod">/month</span>
+      </div>
+      <p class="plan-description">Perfect for early-stage founders testing their ideas</p>
+      <ul class="features-list">
+        <li><i class="fas fa-check-circle"></i> Everything in Free</li>
+        <li><i class="fas fa-check-circle"></i> 20 AI Insights / month</li>
+        <li><i class="fas fa-check-circle"></i> Advanced Competitor Mapping</li>
+        <li><i class="fas fa-check-circle"></i> Email Support</li>
+        <li><i class="fas fa-check-circle"></i> 5 Startup Plans / month</li>
+        <li class="disabled"><i class="fas fa-times-circle"></i> Investor Matching</li>
+        <li class="disabled"><i class="fas fa-times-circle"></i> API Access</li>
+      </ul>
+      <button class="subscribe-btn" onclick="subscribe('Starter')">Get Started</button>
+    </div>
+
+    <!-- Pro Plan (Popular) -->
+    <div class="pricing-card popular">
+      <div class="popular-badge"><i class="fas fa-star"></i> MOST POPULAR</div>
+      <div class="plan-icon"><i class="fas fa-rocket"></i></div>
+      <h2 class="plan-name">Pro</h2>
+      <div class="plan-price">
+        <span class="price-amount" id="proPrice">$79</span>
+        <span class="price-period" id="proPeriod">/month</span>
+      </div>
+      <p class="plan-description">Ideal for growing startups ready to scale</p>
+      <ul class="features-list">
+        <li><i class="fas fa-check-circle"></i> Everything in Starter</li>
+        <li><i class="fas fa-check-circle"></i> Unlimited AI Insights</li>
+        <li><i class="fas fa-check-circle"></i> Smart Investor Matching</li>
+        <li><i class="fas fa-check-circle"></i> Pitch Deck Analyzer</li>
+        <li><i class="fas fa-check-circle"></i> Priority Support</li>
+        <li><i class="fas fa-check-circle"></i> API Access (Limited)</li>
+        <li><i class="fas fa-check-circle"></i> Unlimited Startup Plans</li>
+      </ul>
+      <button class="subscribe-btn popular-btn" onclick="subscribe('Pro')">Start Free Trial</button>
+    </div>
+
+    <!-- Enterprise Plan -->
+    <div class="pricing-card">
+      <div class="plan-icon"><i class="fas fa-crown"></i></div>
+      <h2 class="plan-name">Enterprise</h2>
+      <div class="plan-price">
+        <span class="price-amount" id="enterprisePrice">$199</span>
+        <span class="price-period" id="enterprisePeriod">/month</span>
+      </div>
+      <p class="plan-description">For established startups and investment firms</p>
+      <ul class="features-list">
+        <li><i class="fas fa-check-circle"></i> Everything in Pro</li>
+        <li><i class="fas fa-check-circle"></i> Custom AI Models</li>
+        <li><i class="fas fa-check-circle"></i> Unlimited API Access</li>
+        <li><i class="fas fa-check-circle"></i> Dedicated Account Manager</li>
+        <li><i class="fas fa-check-circle"></i> White-label Reports</li>
+        <li><i class="fas fa-check-circle"></i> 24/7 Premium Support</li>
+        <li><i class="fas fa-check-circle"></i> Team Collaboration Tools</li>
+      </ul>
+      <button class="subscribe-btn" onclick="subscribe('Enterprise')">Contact Sales</button>
+    </div>
+  </div>
+
+  <!-- Feature Comparison Table -->
+  <div class="comparison-section">
+    <h2 class="section-title">Compare All Features</h2>
+    <div class="comparison-table">
+      <table>
+        <thead>
+          <tr>
+            <th>Features</th>
+            <th>Free</th>
+            <th>Starter</th>
+            <th>Pro</th>
+            <th>Enterprise</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>AI Market Analysis</td><td><i class="fas fa-check check-icon"></i> 3/mo</td><td><i class="fas fa-check check-icon"></i> 20/mo</td><td><i class="fas fa-check check-icon"></i> Unlimited</td><td><i class="fas fa-check check-icon"></i> Unlimited</td></tr>
+          <tr><td>Competitor Mapping</td><td><i class="fas fa-check check-icon"></i> Basic</td><td><i class="fas fa-check check-icon"></i> Advanced</td><td><i class="fas fa-check check-icon"></i> Pro</td><td><i class="fas fa-check check-icon"></i> Custom</td></tr>
+          <tr><td>Startup Plan Generator</td><td><i class="fas fa-check check-icon"></i> 1/mo</td><td><i class="fas fa-check check-icon"></i> 5/mo</td><td><i class="fas fa-check check-icon"></i> Unlimited</td><td><i class="fas fa-check check-icon"></i> Unlimited</td></tr>
+          <tr><td>Investor Matching</td><td><i class="fas fa-times times-icon"></i></td><td><i class="fas fa-times times-icon"></i></td><td><i class="fas fa-check check-icon"></i></td><td><i class="fas fa-check check-icon"></i> Premium</td></tr>
+          <tr><td>Pitch Deck Analyzer</td><td><i class="fas fa-times times-icon"></i></td><td><i class="fas fa-check check-icon"></i> Basic</td><td><i class="fas fa-check check-icon"></i> AI-Powered</td><td><i class="fas fa-check check-icon"></i> Advanced AI</td></tr>
+          <tr><td>API Access</td><td><i class="fas fa-times times-icon"></i></td><td><i class="fas fa-times times-icon"></i></td><td><i class="fas fa-check check-icon"></i> Limited</td><td><i class="fas fa-check check-icon"></i> Unlimited</td></tr>
+          <tr><td>Customer Support</td><td>Community</td><td>Email</td><td>Priority</td><td>24/7 Dedicated</td></tr>
+          <tr><td>Team Collaboration</td><td><i class="fas fa-times times-icon"></i></td><td><i class="fas fa-times times-icon"></i></td><td><i class="fas fa-times times-icon"></i></td><td><i class="fas fa-check check-icon"></i></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- FAQ Section -->
+  <div class="faq-section">
+    <h2 class="section-title">Frequently Asked Questions</h2>
+    <div class="faq-grid">
+      <div class="faq-item" onclick="toggleFaq(this)">
+        <div class="faq-question">
+          <span>Is the Free plan really free forever?</span>
+          <i class="fas fa-chevron-down"></i>
+        </div>
+        <div class="faq-answer">Yes! The Free plan is completely free with no time limit. It includes essential features to help you validate your startup idea.</div>
+      </div>
+      <div class="faq-item" onclick="toggleFaq(this)">
+        <div class="faq-question">
+          <span>Can I switch between plans?</span>
+          <i class="fas fa-chevron-down"></i>
+        </div>
+        <div class="faq-answer">Absolutely! You can upgrade, downgrade, or cancel at any time. Changes take effect immediately.</div>
+      </div>
+      <div class="faq-item" onclick="toggleFaq(this)">
+        <div class="faq-question">
+          <span>What payment methods do you accept?</span>
+          <i class="fas fa-chevron-down"></i>
+        </div>
+        <div class="faq-answer">We accept all major credit cards, PayPal, and bank transfers for Enterprise plans.</div>
+      </div>
+      <div class="faq-item" onclick="toggleFaq(this)">
+        <div class="faq-question">
+          <span>Do I need a credit card for the Free plan?</span>
+          <i class="fas fa-chevron-down"></i>
+        </div>
+        <div class="faq-answer">No credit card required! Just sign up with your email and start using the Free plan instantly.</div>
+      </div>
+      <div class="faq-item" onclick="toggleFaq(this)">
+        <div class="faq-question">
+          <span>Is there a free trial for paid plans?</span>
+          <i class="fas fa-chevron-down"></i>
+        </div>
+        <div class="faq-answer">Yes! The Pro plan includes a 14-day free trial. No commitment required.</div>
+      </div>
+      <div class="faq-item" onclick="toggleFaq(this)">
+        <div class="faq-question">
+          <span>Can I cancel anytime?</span>
+          <i class="fas fa-chevron-down"></i>
+        </div>
+        <div class="faq-answer">Absolutely! You can cancel your subscription at any time with no hidden fees.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Trust Badges -->
+  <div class="trust-section">
+    <p style="color: #94a3b8;">Trusted by 10,000+ founders and investors worldwide</p>
+    <div class="trust-icons">
+      <i class="fab fa-stripe"></i>
+      <i class="fab fa-paypal"></i>
+      <i class="fas fa-shield-alt"></i>
+      <i class="fas fa-lock"></i>
+      <i class="fas fa-credit-card"></i>
+    </div>
+  </div>
+
+  <footer>
+    ⚡ AI Venture Capital Intelligence · Secure Payment · 30-Day Money-Back Guarantee
+  </footer>
+</div>
+
+<script>
+  // Particle Animation System
+  const canvas = document.getElementById('particleCanvas');
+  const ctx = canvas.getContext('2d');
+  let width = window.innerWidth;
+  let height = window.innerHeight;
+  let particles = [];
+  const PARTICLE_COUNT = 100;
+
+  function resizeCanvas() {
+    width = window.innerWidth;
+    height = window.innerHeight;
+    canvas.width = width;
+    canvas.height = height;
+    initParticles();
+  }
+
+  class Particle {
+    constructor() {
+      this.x = Math.random() * width;
+      this.y = Math.random() * height;
+      this.vx = (Math.random() - 0.5) * 0.4;
+      this.vy = (Math.random() - 0.5) * 0.3;
+      this.radius = Math.random() * 2 + 1.2;
+      this.alpha = Math.random() * 0.5 + 0.2;
+    }
+    update() {
+      this.x += this.vx;
+      this.y += this.vy;
+      if (this.x < 0) this.x = width;
+      if (this.x > width) this.x = 0;
+      if (this.y < 0) this.y = height;
+      if (this.y > height) this.y = 0;
+    }
+    draw() {
+      ctx.beginPath();
+      ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(80, 210, 255, ${this.alpha})`;
+      ctx.fill();
+    }
+  }
+
+  function initParticles() {
+    particles = [];
+    for (let i = 0; i < PARTICLE_COUNT; i++) particles.push(new Particle());
+  }
+
+  function animateParticles() {
+    if (!ctx) return;
+    ctx.clearRect(0, 0, width, height);
+    for (let p of particles) {
+      p.update();
+      p.draw();
+    }
+    for (let i = 0; i < particles.length; i++) {
+      for (let j = i + 1; j < particles.length; j++) {
+        const dx = particles[i].x - particles[j].x;
+        const dy = particles[i].y - particles[j].y;
+        const dist = Math.hypot(dx, dy);
+        if (dist < 120) {
+          ctx.beginPath();
+          ctx.moveTo(particles[i].x, particles[i].y);
+          ctx.lineTo(particles[j].x, particles[j].y);
+          ctx.strokeStyle = `rgba(0, 200, 255, ${0.15 * (1 - dist / 120)})`;
+          ctx.stroke();
+        }
+      }
+    }
+    requestAnimationFrame(animateParticles);
+  }
+
+  window.addEventListener('resize', () => {
+    resizeCanvas();
+    initParticles();
+  });
+
+  resizeCanvas();
+  initParticles();
+  animateParticles();
+
+  // Billing Toggle Logic
+  let isYearly = false;
+  const toggleSwitch = document.getElementById('billingToggle');
+  const monthlyOption = document.querySelector('.toggle-option.monthly');
+  const yearlyOption = document.querySelector('.toggle-option.yearly');
+
+  function updatePrices() {
+    const basicPrice = document.getElementById('basicPrice');
+    const proPrice = document.getElementById('proPrice');
+    const enterprisePrice = document.getElementById('enterprisePrice');
+    const basicPeriod = document.getElementById('basicPeriod');
+    const proPeriod = document.getElementById('proPeriod');
+    const enterprisePeriod = document.getElementById('enterprisePeriod');
+
+    if (isYearly) {
+      basicPrice.textContent = '$278';
+      proPrice.textContent = '$758';
+      enterprisePrice.textContent = '$1,910';
+      basicPeriod.textContent = '/year';
+      proPeriod.textContent = '/year';
+      enterprisePeriod.textContent = '/year';
+    } else {
+      basicPrice.textContent = '$29';
+      proPrice.textContent = '$79';
+      enterprisePrice.textContent = '$199';
+      basicPeriod.textContent = '/month';
+      proPeriod.textContent = '/month';
+      enterprisePeriod.textContent = '/month';
+    }
+  }
+
+  toggleSwitch.addEventListener('click', () => {
+    isYearly = !isYearly;
+    toggleSwitch.classList.toggle('active');
+    monthlyOption.classList.toggle('active');
+    yearlyOption.classList.toggle('active');
+    updatePrices();
+  });
+
+  // FAQ Toggle
+  function toggleFaq(element) {
+    element.classList.toggle('active');
+  }
+
+  // Subscribe Function
+  function subscribe(plan) {
+    if (plan === 'Free') {
+      alert(`🎉 Welcome to UdyamVerse Free Plan!\n\nYou've successfully started your free account.\n\n✨ Free Features Include:\n• 3 AI Market Analysis / month\n• Basic Competitor Overview\n• 1 Startup Plan Generation\n• Community Support\n\nUpgrade anytime to unlock more features! 🚀`);
+      
+      // Redirect to dashboard or set free plan in localStorage
+      localStorage.setItem('subscriptionPlan', 'free');
+      window.location.href = 'homepage.html';
+    } else {
+      const period = isYearly ? 'yearly' : 'monthly';
+      const price = {
+        'Starter': isYearly ? '$278/year' : '$29/month',
+        'Pro': isYearly ? '$758/year' : '$79/month',
+        'Enterprise': isYearly ? '$1,910/year' : '$199/month'
+      }[plan];
+      
+      alert(`🎉 Thank you for choosing the ${plan} plan (${price})!\n\nYou'll be redirected to the payment gateway to complete your subscription.\n\n✨ Features included:\n• AI-powered insights\n• Investor matching\n• Priority support\n\nNeed help? Contact us at udyamverse@gmail.com`);
+      
+      // Here you would redirect to your payment gateway
+      // window.location.href = `checkout.html?plan=${plan}&period=${period}`;
+    }
+  }
+
+  // Animation on Load
+  document.querySelectorAll('.pricing-card').forEach((card, i) => {
+    card.style.opacity = '0';
+    card.style.transform = 'translateY(50px)';
+    setTimeout(() => {
+      card.style.transition = 'all 0.8s ease';
+      card.style.opacity = '1';
+      card.style.transform = 'translateY(0)';
+    }, i * 150);
+  });
+</script>
+</body>
+</html>

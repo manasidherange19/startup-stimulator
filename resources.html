@@ -1,0 +1,930 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>Resources - UdyamVerse | AI-Powered Startup Intelligence Platform</title>
+  
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      background: #05050f;
+      font-family: 'Space Grotesk', sans-serif;
+      overflow-x: hidden;
+      color: #eef5ff;
+    }
+
+    .bg-orb {
+      position: fixed;
+      width: 100vw;
+      height: 100vh;
+      top: 0;
+      left: 0;
+      z-index: -2;
+      background: radial-gradient(circle at 20% 30%, #0a0a2a, #010105);
+    }
+
+    .bg-orb::before {
+      content: "";
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      background: radial-gradient(circle at 70% 60%, rgba(0, 255, 255, 0.08), transparent 60%);
+      animation: pulseGlow 12s infinite alternate;
+    }
+
+    @keyframes pulseGlow {
+      0% { opacity: 0.3; transform: scale(1);}
+      100% { opacity: 0.8; transform: scale(1.2);}
+    }
+
+    canvas#neuralCanvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: -1;
+      pointer-events: none;
+    }
+
+    .container {
+      max-width: 1600px;
+      margin: 0 auto;
+      padding: 1.5rem 2rem 3rem;
+      position: relative;
+      z-index: 2;
+    }
+
+    /* Navbar Styles - MATCH LANDING PAGE */
+    .navbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 2rem;
+      padding: 0.8rem 1.5rem;
+      background: rgba(10, 20, 30, 0.55);
+      backdrop-filter: blur(14px);
+      border-radius: 70px;
+      border: 1px solid rgba(0, 255, 255, 0.25);
+      transition: all 0.3s;
+    }
+
+    .navbar.scrolled {
+      background: rgba(10, 20, 30, 0.8);
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .logo-icon {
+      width: 2rem;
+      height: 2rem;
+      background: linear-gradient(135deg, #aaffff, #4d8eff);
+      border-radius: 0.6rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      font-size: 1rem;
+      color: #fff;
+    }
+
+    .logo-text {
+      font-size: 1.3rem;
+      font-weight: 700;
+      background: linear-gradient(135deg, #aaffff, #4d8eff);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+
+    /* Right side nav links */
+    .nav-right {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 0.5rem;
+      align-items: center;
+    }
+
+    .nav-link {
+      background: rgba(20, 30, 45, 0.6);
+      backdrop-filter: blur(8px);
+      padding: 0.5rem 1rem;
+      border-radius: 40px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.3s;
+      border: 1px solid rgba(80, 180, 255, 0.2);
+      color: #eef5ff;
+      text-decoration: none;
+      font-size: 0.85rem;
+    }
+
+    .nav-link:hover,
+    .nav-link.active {
+      background: linear-gradient(95deg, #0f2b3d, #0a1a2c);
+      border-color: #3effea;
+      box-shadow: 0 0 14px rgba(62, 255, 234, 0.4);
+      transform: translateY(-2px);
+    }
+
+    .btn-primary {
+      background: linear-gradient(95deg, #00c9ff, #5e2aff);
+      border: none;
+      padding: 0.5rem 1.2rem;
+      border-radius: 60px;
+      font-weight: bold;
+      color: white;
+      cursor: pointer;
+      transition: 0.2s;
+      font-family: inherit;
+      font-size: 0.85rem;
+      white-space: nowrap;
+      text-decoration: none;
+      display: inline-block;
+    }
+
+    .btn-primary:hover {
+      transform: scale(1.02);
+      box-shadow: 0 0 20px #00ddff;
+    }
+
+    .btn-outline {
+      background: transparent;
+      border: 1px solid #00c9ff;
+      padding: 0.5rem 1.2rem;
+      border-radius: 60px;
+      font-weight: bold;
+      color: #00c9ff;
+      cursor: pointer;
+      transition: 0.2s;
+      font-family: inherit;
+      font-size: 0.85rem;
+      text-decoration: none;
+      display: inline-block;
+    }
+
+    .btn-outline:hover {
+      background: rgba(0, 201, 255, 0.1);
+      transform: scale(1.02);
+    }
+
+    .user-greeting {
+      color: #7df9ff;
+      padding: 0.4rem 1rem;
+      background: rgba(0, 201, 255, 0.1);
+      border-radius: 40px;
+      font-size: 0.85rem;
+      font-weight: 500;
+      border: 1px solid rgba(0, 201, 255, 0.2);
+      white-space: nowrap;
+    }
+
+    /* Page Header */
+    .page-header {
+      text-align: center;
+      padding: 1.5rem 1.5rem 2rem;
+    }
+
+    .page-title {
+      font-size: 2.5rem;
+      font-weight: 700;
+      background: linear-gradient(125deg, #FFFFFF, #7df9ff, #3a86ff);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      margin-bottom: 1rem;
+    }
+
+    @media (min-width: 768px) {
+      .page-title {
+        font-size: 3rem;
+      }
+    }
+
+    .page-subtitle {
+      color: #9ca3af;
+      font-size: 1rem;
+      max-width: 42rem;
+      margin: 0 auto;
+    }
+
+    /* Category Tabs */
+    .category-tabs {
+      display: flex;
+      justify-content: center;
+      gap: 0.8rem;
+      margin: 1.5rem 1rem;
+      flex-wrap: wrap;
+    }
+
+    .category-btn {
+      padding: 0.5rem 1.2rem;
+      background: rgba(20, 30, 45, 0.6);
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(80, 180, 255, 0.2);
+      border-radius: 40px;
+      color: #9ca3af;
+      cursor: pointer;
+      transition: all 0.3s;
+      font-weight: 500;
+      font-family: inherit;
+      font-size: 0.85rem;
+    }
+
+    .category-btn:hover, .category-btn.active {
+      background: linear-gradient(95deg, #0f2b3d, #0a1a2c);
+      border-color: #3effea;
+      box-shadow: 0 0 14px rgba(62, 255, 234, 0.4);
+      color: white;
+      transform: translateY(-2px);
+    }
+
+    /* Featured Section */
+    .featured-section {
+      padding: 1.5rem 1rem;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .featured-card {
+      background: rgba(12, 22, 35, 0.65);
+      backdrop-filter: blur(12px);
+      border-radius: 1.2rem;
+      overflow: hidden;
+      border: 1px solid rgba(0, 255, 255, 0.2);
+      transition: all 0.35s ease;
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 1rem;
+    }
+
+    @media (min-width: 768px) {
+      .featured-card {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+
+    .featured-content {
+      padding: 1.5rem;
+    }
+
+    .featured-badge {
+      background: rgba(0, 201, 255, 0.15);
+      padding: 0.2rem 0.8rem;
+      border-radius: 40px;
+      font-size: 0.7rem;
+      color: #7df9ff;
+      display: inline-block;
+      margin-bottom: 0.8rem;
+    }
+
+    .featured-title {
+      font-size: 1.3rem;
+      font-weight: 700;
+      margin-bottom: 0.8rem;
+      line-height: 1.3;
+    }
+
+    @media (min-width: 768px) {
+      .featured-title {
+        font-size: 1.5rem;
+      }
+    }
+
+    .featured-desc {
+      color: #cbd5e6;
+      margin-bottom: 1rem;
+      line-height: 1.5;
+      font-size: 0.85rem;
+    }
+
+    .featured-image {
+      background: linear-gradient(135deg, #1e293b, #0f172a);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 250px;
+    }
+
+    .featured-image i {
+      font-size: 5rem;
+      color: #00c9ff;
+      opacity: 0.5;
+    }
+
+    /* Resource Grid */
+    .resources-section {
+      padding: 1.5rem 1rem;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .section-title {
+      font-size: 1.4rem;
+      font-weight: 700;
+      margin-bottom: 1.5rem;
+      color: #7df9ff;
+    }
+
+    .resources-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 1.2rem;
+    }
+
+    @media (min-width: 768px) {
+      .resources-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    @media (min-width: 1024px) {
+      .resources-grid {
+        grid-template-columns: repeat(3, 1fr);
+      }
+    }
+
+    .resource-card {
+      background: rgba(12, 22, 35, 0.65);
+      backdrop-filter: blur(12px);
+      border-radius: 1rem;
+      overflow: hidden;
+      border: 1px solid rgba(0, 255, 255, 0.2);
+      transition: all 0.35s ease;
+    }
+
+    .resource-card:hover {
+      transform: translateY(-5px);
+      border-color: cyan;
+      box-shadow: 0 15px 30px -12px rgba(0,255,255,0.2);
+    }
+
+    .resource-image {
+      height: 160px;
+      background: linear-gradient(135deg, #1e293b, #0f172a);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .resource-image i {
+      font-size: 2.5rem;
+      color: #00c9ff;
+      opacity: 0.6;
+    }
+
+    .resource-category {
+      position: absolute;
+      top: 0.8rem;
+      left: 0.8rem;
+      background: rgba(0, 201, 255, 0.9);
+      padding: 0.2rem 0.6rem;
+      border-radius: 40px;
+      font-size: 0.6rem;
+      font-weight: 600;
+    }
+
+    .resource-content {
+      padding: 1rem;
+    }
+
+    .resource-date {
+      font-size: 0.65rem;
+      color: #9ca3af;
+      margin-bottom: 0.4rem;
+    }
+
+    .resource-title {
+      font-size: 1rem;
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+      line-height: 1.4;
+    }
+
+    .resource-desc {
+      color: #cbd5e6;
+      font-size: 0.75rem;
+      line-height: 1.4;
+      margin-bottom: 0.8rem;
+    }
+
+    .resource-link {
+      color: #7df9ff;
+      text-decoration: none;
+      font-weight: 500;
+      font-size: 0.75rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      transition: gap 0.3s;
+    }
+
+    .resource-link:hover {
+      gap: 0.6rem;
+      color: #00c9ff;
+    }
+
+    /* Newsletter Section */
+    .newsletter-section {
+      background: linear-gradient(135deg, rgba(0, 201, 255, 0.1), rgba(94, 42, 255, 0.1));
+      border-radius: 1.2rem;
+      padding: 2rem;
+      margin: 2rem 1rem;
+      text-align: center;
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(0, 201, 255, 0.3);
+    }
+
+    .newsletter-title {
+      font-size: 1.4rem;
+      font-weight: 700;
+      margin-bottom: 0.8rem;
+    }
+
+    .newsletter-text {
+      color: #9ca3af;
+      margin-bottom: 1.5rem;
+      font-size: 0.85rem;
+    }
+
+    .newsletter-form {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 0.8rem;
+      max-width: 450px;
+      margin: 0 auto;
+    }
+
+    .newsletter-input {
+      flex: 1;
+      padding: 0.7rem 1rem;
+      border-radius: 50px;
+      background: rgba(0, 0, 0, 0.6);
+      border: 1px solid #00c9ff;
+      color: white;
+      font-size: 0.85rem;
+      font-family: inherit;
+    }
+
+    .newsletter-input:focus {
+      outline: none;
+      border-color: #00c9ff;
+      box-shadow: 0 0 12px rgba(0, 201, 255, 0.3);
+    }
+
+    /* Footer */
+    footer {
+      text-align: center;
+      margin-top: 2rem;
+      opacity: 0.6;
+      font-size: 0.7rem;
+      padding: 1.5rem;
+      border-top: 1px solid rgba(0, 255, 255, 0.2);
+    }
+
+    .footer-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 1.5rem;
+      margin-bottom: 1.5rem;
+      text-align: left;
+    }
+
+    @media (min-width: 768px) {
+      .footer-grid {
+        grid-template-columns: repeat(4, 1fr);
+      }
+    }
+
+    .footer-logo {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .footer-logo-icon {
+      width: 1.5rem;
+      height: 1.5rem;
+      background: linear-gradient(135deg, #aaffff, #4d8eff);
+      border-radius: 0.4rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.7rem;
+    }
+
+    .footer-logo-text {
+      font-weight: 600;
+      background: linear-gradient(135deg, #aaffff, #4d8eff);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      font-size: 0.9rem;
+    }
+
+    .footer-description {
+      color: #6b7280;
+      font-size: 0.7rem;
+    }
+
+    .footer-title {
+      color: #7df9ff;
+      font-size: 0.8rem;
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+    }
+
+    .footer-links {
+      list-style: none;
+    }
+
+    .footer-link {
+      color: #6b7280;
+      font-size: 0.7rem;
+      cursor: pointer;
+      margin-bottom: 0.3rem;
+      transition: color 0.2s;
+    }
+
+    .footer-link:hover {
+      color: #7df9ff;
+    }
+
+    .footer-copyright {
+      text-align: center;
+      color: #6b7280;
+      font-size: 0.65rem;
+      padding-top: 1rem;
+      border-top: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    @media (max-width: 768px) {
+      .container {
+        padding: 1rem;
+      }
+      .navbar {
+        flex-direction: column;
+        gap: 0.8rem;
+        padding: 0.8rem;
+        border-radius: 1.5rem;
+      }
+      .nav-right {
+        flex-wrap: wrap;
+        justify-content: center;
+      }
+      .nav-links {
+        flex-wrap: wrap;
+        justify-content: center;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="bg-orb"></div>
+  <canvas id="neuralCanvas"></canvas>
+
+  <div class="container">
+    <!-- Navbar - MATCH LANDING PAGE STYLE -->
+    <nav class="navbar" id="navbar">
+      <div class="logo">
+        <div class="logo-icon">U</div>
+        <span class="logo-text">UdyamVerse</span>
+      </div>
+      <div class="nav-right">
+        <div class="nav-links">
+          <a href="landing.html" class="nav-link">Home</a>
+          <a href="product.html" class="nav-link">Product</a>
+          <a href="solutions.html" class="nav-link">Solutions</a>
+          <a href="resources.html" class="nav-link active">Resources</a>
+        </div>
+        <div id="navButtons">
+          <a href="index.html" class="btn-primary">Get Started →</a>
+        </div>
+      </div>
+    </nav>
+
+    <!-- Page Header -->
+    <div class="page-header">
+      <h1 class="page-title">Resources & Insights</h1>
+      <p class="page-subtitle">Expert guides, case studies, and insights to help you navigate the startup ecosystem</p>
+    </div>
+
+    <!-- Category Tabs -->
+    <div class="category-tabs">
+      <button class="category-btn active" onclick="filterResources('all')">All Resources</button>
+      <button class="category-btn" onclick="filterResources('blog')">Blog Posts</button>
+      <button class="category-btn" onclick="filterResources('guide')">Guides</button>
+      <button class="category-btn" onclick="filterResources('case-study')">Case Studies</button>
+      <button class="category-btn" onclick="filterResources('webinar')">Webinars</button>
+    </div>
+
+    <!-- Featured Resource -->
+    <div class="featured-section">
+      <div class="featured-card">
+        <div class="featured-content">
+          <span class="featured-badge">FEATURED GUIDE</span>
+          <h2 class="featured-title">The Complete Guide to AI-Powered Startup Validation</h2>
+          <p class="featured-desc">Learn how to leverage artificial intelligence to validate your startup idea, analyze market fit, and predict success before investing resources. Includes real-world examples and actionable frameworks.</p>
+          <a href="#" class="resource-link">Read the Guide →</a>
+        </div>
+        <div class="featured-image">
+          <i class="fas fa-chart-line"></i>
+        </div>
+      </div>
+    </div>
+
+    <!-- Blog Posts Section -->
+    <div class="resources-section" id="blogSection">
+      <h2 class="section-title">Latest Blog Posts</h2>
+      <div class="resources-grid" id="blogGrid"></div>
+    </div>
+
+    <!-- Guides Section -->
+    <div class="resources-section" id="guideSection">
+      <h2 class="section-title">In-Depth Guides</h2>
+      <div class="resources-grid" id="guideGrid"></div>
+    </div>
+
+    <!-- Case Studies Section -->
+    <div class="resources-section" id="caseStudySection">
+      <h2 class="section-title">Success Stories</h2>
+      <div class="resources-grid" id="caseStudyGrid"></div>
+    </div>
+
+    <!-- Webinars Section -->
+    <div class="resources-section" id="webinarSection">
+      <h2 class="section-title">Upcoming Webinars</h2>
+      <div class="resources-grid" id="webinarGrid"></div>
+    </div>
+
+    <!-- Newsletter Section -->
+    <div class="newsletter-section">
+      <h2 class="newsletter-title">Stay in the loop</h2>
+      <p class="newsletter-text">Get the latest insights, guides, and case studies delivered to your inbox weekly.</p>
+      <div class="newsletter-form">
+        <input type="email" class="newsletter-input" placeholder="Enter your email address">
+        <button class="btn-primary" onclick="alert('Subscribed!')">Subscribe →</button>
+      </div>
+      <p style="font-size: 0.7rem; color: #6b7280; margin-top: 0.8rem;">No spam, unsubscribe anytime.</p>
+    </div>
+
+    <!-- Footer -->
+    <footer>
+      <div class="footer-grid">
+        <div>
+          <div class="footer-logo">
+            <div class="footer-logo-icon">U</div>
+            <span class="footer-logo-text">UdyamVerse</span>
+          </div>
+          <p class="footer-description">AI-powered intelligence for the startup economy.</p>
+        </div>
+        <div>
+          <h4 class="footer-title">Platform</h4>
+          <ul class="footer-links">
+            <li class="footer-link">AI Analysis</li>
+            <li class="footer-link">Simulations</li>
+            <li class="footer-link">Investor Tools</li>
+            <li class="footer-link">Founder Suite</li>
+          </ul>
+        </div>
+        <div>
+          <h4 class="footer-title">Resources</h4>
+          <ul class="footer-links">
+            <li class="footer-link">Documentation</li>
+            <li class="footer-link">API Status</li>
+            <li class="footer-link">Case Studies</li>
+            <li class="footer-link">Blog</li>
+          </ul>
+        </div>
+        <div>
+          <h4 class="footer-title">Legal</h4>
+          <ul class="footer-links">
+            <li class="footer-link">Privacy</li>
+            <li class="footer-link">Terms</li>
+            <li class="footer-link">Security</li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer-copyright">
+        © 2025 UdyamVerse — Redefining startup intelligence.
+      </div>
+    </footer>
+  </div>
+
+  <script>
+    // Resource Data
+    const resources = {
+      blog: [
+        { title: "How AI is Revolutionizing Venture Capital Decision Making", desc: "Discover how machine learning models are transforming how VCs evaluate and invest in startups.", date: "March 15, 2025", readTime: "8 min read", category: "blog", icon: "fas fa-newspaper" },
+        { title: "10 Common Startup Failure Patterns and How to Avoid Them", desc: "Learn from data-driven insights about why startups fail and how to increase your chances of success.", date: "March 10, 2025", readTime: "12 min read", category: "blog", icon: "fas fa-newspaper" },
+        { title: "The Future of Pitch Decks: AI-Powered Presentations", desc: "How artificial intelligence is helping founders create more compelling investor presentations.", date: "March 5, 2025", readTime: "6 min read", category: "blog", icon: "fas fa-newspaper" },
+        { title: "Predicting Unicorns: What Data Tells Us About High-Growth Startups", desc: "Analysis of patterns and metrics that predict which startups will achieve billion-dollar valuations.", date: "February 28, 2025", readTime: "10 min read", category: "blog", icon: "fas fa-newspaper" }
+      ],
+      guide: [
+        { title: "The Ultimate Guide to Startup Valuation", desc: "Everything you need to know about valuing early-stage startups, from pre-revenue to Series A.", date: "March 12, 2025", readTime: "25 min read", category: "guide", icon: "fas fa-book" },
+        { title: "Mastering Go-to-Market Strategy: A Step-by-Step Framework", desc: "A comprehensive guide to launching your product successfully and acquiring your first customers.", date: "March 1, 2025", readTime: "20 min read", category: "guide", icon: "fas fa-book" },
+        { title: "Building a Scalable Business Model: From Idea to IPO", desc: "Learn how successful startups design business models that scale from early stage to enterprise.", date: "February 20, 2025", readTime: "18 min read", category: "guide", icon: "fas fa-book" }
+      ],
+      caseStudy: [
+        { title: "How FinTech Startup Raised $10M Using AI-Driven Pitch Analysis", desc: "A case study on how a FinTech company optimized their pitch deck and secured Series A funding.", date: "March 8, 2025", readTime: "12 min read", category: "case-study", icon: "fas fa-chart-line" },
+        { title: "From Idea to Exit: A SaaS Company's Journey with AI Validation", desc: "How a B2B SaaS startup used predictive analytics to validate their idea and achieve successful acquisition.", date: "February 25, 2025", readTime: "15 min read", category: "case-study", icon: "fas fa-chart-line" },
+        { title: "VC Firm Achieves 3x ROI Using Data-Driven Deal Sourcing", desc: "How a venture capital firm transformed their investment strategy with AI-powered intelligence.", date: "February 18, 2025", readTime: "10 min read", category: "case-study", icon: "fas fa-chart-line" }
+      ],
+      webinar: [
+        { title: "AI in Venture Capital: Trends and Predictions for 2025", desc: "Join industry experts as they discuss the future of AI in startup investing.", date: "April 5, 2025", readTime: "60 min webinar", category: "webinar", icon: "fas fa-video" },
+        { title: "Building Unicorn Startups: Lessons from Founders", desc: "Live panel discussion with successful founders who built billion-dollar companies.", date: "April 12, 2025", readTime: "90 min webinar", category: "webinar", icon: "fas fa-video" },
+        { title: "Mastering Investor Pitches: An Interactive Workshop", desc: "Hands-on workshop to help founders perfect their pitch deck and presentation skills.", date: "April 20, 2025", readTime: "120 min workshop", category: "webinar", icon: "fas fa-video" }
+      ]
+    };
+
+    function renderResourceCards(items, containerId) {
+      const container = document.getElementById(containerId);
+      if (!container) return;
+      let html = '';
+      items.forEach(item => {
+        html += `
+          <div class="resource-card" data-category="${item.category}">
+            <div class="resource-image">
+              <i class="${item.icon}"></i>
+              <span class="resource-category">${item.category === 'blog' ? 'Blog Post' : item.category === 'guide' ? 'Guide' : item.category === 'case-study' ? 'Case Study' : 'Webinar'}</span>
+            </div>
+            <div class="resource-content">
+              <div class="resource-date">${item.date} • ${item.readTime}</div>
+              <div class="resource-title">${item.title}</div>
+              <div class="resource-desc">${item.desc}</div>
+              <a href="#" class="resource-link" onclick="alert('Opening: ${item.title}')">Read More →</a>
+            </div>
+          </div>
+        `;
+      });
+      container.innerHTML = html;
+    }
+
+    renderResourceCards(resources.blog, 'blogGrid');
+    renderResourceCards(resources.guide, 'guideGrid');
+    renderResourceCards(resources.caseStudy, 'caseStudyGrid');
+    renderResourceCards(resources.webinar, 'webinarGrid');
+
+    function filterResources(category) {
+      const sections = ['blogSection', 'guideSection', 'caseStudySection', 'webinarSection'];
+      sections.forEach(sectionId => {
+        const section = document.getElementById(sectionId);
+        if (section) {
+          if (category === 'all') {
+            section.style.display = 'block';
+          } else {
+            const sectionType = sectionId.replace('Section', '');
+            section.style.display = sectionType === category ? 'block' : 'none';
+          }
+        }
+      });
+      
+      document.querySelectorAll('.category-btn').forEach(btn => {
+        btn.classList.remove('active');
+        if (btn.textContent.toLowerCase().includes(category) || (category === 'all' && btn.textContent === 'All Resources')) {
+          btn.classList.add('active');
+        }
+      });
+    }
+
+    // Neural Network Background Animation
+    const canvas = document.getElementById('neuralCanvas');
+    const ctx = canvas.getContext('2d');
+    let width = window.innerWidth;
+    let height = window.innerHeight;
+    let particles = [];
+    const PARTICLE_COUNT = 80;
+
+    function resizeCanvas() {
+      width = window.innerWidth;
+      height = window.innerHeight;
+      canvas.width = width;
+      canvas.height = height;
+    }
+
+    class Particle {
+      constructor() {
+        this.x = Math.random() * width;
+        this.y = Math.random() * height;
+        this.vx = (Math.random() - 0.5) * 0.4;
+        this.vy = (Math.random() - 0.5) * 0.3;
+        this.radius = Math.random() * 2 + 1;
+        this.alpha = Math.random() * 0.5 + 0.2;
+      }
+      update() {
+        this.x += this.vx;
+        this.y += this.vy;
+        if (this.x < 0) this.x = width;
+        if (this.x > width) this.x = 0;
+        if (this.y < 0) this.y = height;
+        if (this.y > height) this.y = 0;
+      }
+      draw() {
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(80, 210, 255, ${this.alpha})`;
+        ctx.fill();
+      }
+    }
+
+    function initParticles() {
+      particles = [];
+      for (let i = 0; i < PARTICLE_COUNT; i++) {
+        particles.push(new Particle());
+      }
+    }
+
+    function animate() {
+      if (!ctx) return;
+      ctx.clearRect(0, 0, width, height);
+      for (let p of particles) { p.update(); p.draw(); }
+      for (let i = 0; i < particles.length; i++) {
+        for (let j = i + 1; j < particles.length; j++) {
+          const dx = particles[i].x - particles[j].x;
+          const dy = particles[i].y - particles[j].y;
+          const dist = Math.hypot(dx, dy);
+          if (dist < 100) {
+            ctx.beginPath();
+            ctx.moveTo(particles[i].x, particles[i].y);
+            ctx.lineTo(particles[j].x, particles[j].y);
+            ctx.strokeStyle = `rgba(0, 200, 255, ${0.12 * (1 - dist / 100)})`;
+            ctx.stroke();
+          }
+        }
+      }
+      requestAnimationFrame(animate);
+    }
+
+    window.addEventListener('scroll', () => {
+      const navbar = document.getElementById('navbar');
+      if (window.scrollY > 50) navbar.classList.add('scrolled');
+      else navbar.classList.remove('scrolled');
+    });
+
+    resizeCanvas();
+    initParticles();
+    animate();
+    window.addEventListener('resize', () => { resizeCanvas(); initParticles(); });
+
+    // Check login status and update navbar
+    function updateNavbarForLogin() {
+      const isLoggedIn = localStorage.getItem('isLoggedIn');
+      const userName = localStorage.getItem('activeUserName');
+      const navButtons = document.getElementById('navButtons');
+      
+      if (navButtons) {
+        if (isLoggedIn === 'true' && userName) {
+          navButtons.innerHTML = `
+            <a href="index.html" class="btn-primary">Dashboard →</a>
+          `;
+        } else {
+          navButtons.innerHTML = `
+            <a href="index.html" class="btn-primary">Get Started →</a>
+          `;
+        }
+      }
+    }
+
+    // Logout function
+    function logout() {
+      localStorage.removeItem('isLoggedIn');
+      localStorage.removeItem('activeUserName');
+      localStorage.removeItem('activeUserType');
+      localStorage.removeItem('venture_user');
+      localStorage.removeItem('userData');
+      updateNavbarForLogin();
+      window.location.href = 'landing.html';
+    }
+
+    // Call this when page loads
+    document.addEventListener('DOMContentLoaded', function() {
+      updateNavbarForLogin();
+    });
+  </script>
+</body>
+</html>

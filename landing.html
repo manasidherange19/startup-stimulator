@@ -1,0 +1,1214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>UdyamVerse | AI-Powered Startup Intelligence Platform</title>
+  
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  
+  <!-- Swiper CSS -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
+  
+  <style>
+    * { 
+      margin: 0; 
+      padding: 0; 
+      box-sizing: border-box; 
+    }
+    
+    body { 
+      background: #05050f; 
+      font-family: 'Space Grotesk', sans-serif; 
+      overflow-x: hidden; 
+      color: #eef5ff; 
+    }
+    
+    /* Animated Background */
+    .bg-orb { 
+      position: fixed; 
+      width: 100vw; 
+      height: 100vh; 
+      top: 0; 
+      left: 0; 
+      z-index: -2; 
+      background: radial-gradient(circle at 20% 30%, #0a0a2a, #010105); 
+    }
+    
+    .bg-orb::before { 
+      content: ""; 
+      position: absolute; 
+      width: 100%; 
+      height: 100%; 
+      background: radial-gradient(circle at 70% 60%, rgba(0, 255, 255, 0.08), transparent 60%); 
+      animation: pulseGlow 12s infinite alternate; 
+    }
+    
+    @keyframes pulseGlow { 
+      0% { opacity: 0.3; transform: scale(1);} 
+      100% { opacity: 0.8; transform: scale(1.2);} 
+    }
+    
+    canvas#neuralCanvas { 
+      position: fixed; 
+      top: 0; 
+      left: 0; 
+      width: 100%; 
+      height: 100%; 
+      z-index: -1; 
+      pointer-events: none; 
+    }
+    
+    /* Container */
+    .container {
+      max-width: 1600px;
+      margin: 0 auto;
+      padding: 1.5rem 2rem 3rem;
+      position: relative;
+      z-index: 2;
+    }
+
+    /* Navbar Styles - FIXED */
+    .navbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 2rem;
+      padding: 0.8rem 1.5rem;
+      background: rgba(10, 20, 30, 0.55);
+      backdrop-filter: blur(14px);
+      border-radius: 70px;
+      border: 1px solid rgba(0, 255, 255, 0.25);
+      transition: all 0.3s;
+    }
+
+    .navbar.scrolled {
+      background: rgba(10, 20, 30, 0.8);
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .logo-icon {
+      width: 2rem;
+      height: 2rem;
+      background: linear-gradient(135deg, #aaffff, #4d8eff);
+      border-radius: 0.6rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      font-size: 1rem;
+      color: #fff;
+    }
+
+    .logo-text {
+      font-size: 1.3rem;
+      font-weight: 700;
+      background: linear-gradient(135deg, #aaffff, #4d8eff);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+
+    /* Right side nav links */
+    .nav-right {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 0.5rem;
+      align-items: center;
+    }
+
+    .nav-link {
+      background: rgba(20, 30, 45, 0.6);
+      backdrop-filter: blur(8px);
+      padding: 0.5rem 1rem;
+      border-radius: 40px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.3s;
+      border: 1px solid rgba(80, 180, 255, 0.2);
+      color: #eef5ff;
+      text-decoration: none;
+      font-size: 0.85rem;
+    }
+
+    .nav-link:hover,
+    .nav-link.active {
+      background: linear-gradient(95deg, #0f2b3d, #0a1a2c);
+      border-color: #3effea;
+      box-shadow: 0 0 14px rgba(62, 255, 234, 0.4);
+      transform: translateY(-2px);
+    }
+
+    .btn-primary {
+      background: linear-gradient(95deg, #00c9ff, #5e2aff);
+      border: none;
+      padding: 0.5rem 1.2rem;
+      border-radius: 60px;
+      font-weight: bold;
+      color: white;
+      cursor: pointer;
+      transition: 0.2s;
+      font-family: inherit;
+      font-size: 0.85rem;
+      white-space: nowrap;
+    }
+
+    .btn-primary:hover {
+      transform: scale(1.02);
+      box-shadow: 0 0 20px #00ddff;
+    }
+
+    /* Breadcrumbs */
+    .breadcrumbs {
+      padding: 0.5rem 0 1.5rem;
+    }
+
+    .breadcrumb-nav {
+      font-size: 0.75rem;
+      color: #9ca3af;
+    }
+
+    .breadcrumb-list {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+      list-style: none;
+    }
+
+    .breadcrumb-item a {
+      color: #9ca3af;
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+
+    .breadcrumb-item a:hover {
+      color: #7df9ff;
+    }
+
+    .breadcrumb-separator {
+      color: #6b7280;
+    }
+
+    .breadcrumb-active {
+      color: #7df9ff;
+      font-weight: 500;
+    }
+
+    /* Hero Section */
+    .hero {
+      text-align: center;
+      padding: 1.5rem 1.5rem 2.5rem;
+    }
+
+    @media (min-width: 768px) {
+      .hero {
+        padding: 2rem 1.5rem 3rem;
+      }
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: rgba(0, 201, 255, 0.1);
+      backdrop-filter: blur(4px);
+      border-radius: 9999px;
+      padding: 0.3rem 1rem;
+      border: 1px solid rgba(0, 201, 255, 0.3);
+      margin-bottom: 1rem;
+    }
+
+    .badge-dot {
+      position: relative;
+      display: flex;
+      height: 0.5rem;
+      width: 0.5rem;
+    }
+
+    .badge-dot-ping {
+      position: absolute;
+      display: inline-flex;
+      height: 100%;
+      width: 100%;
+      border-radius: 9999px;
+      background-color: #00c9ff;
+      opacity: 0.75;
+      animation: ping 1.5s cubic-bezier(0, 0, 0.2, 1) infinite;
+    }
+
+    .badge-dot-static {
+      position: relative;
+      display: inline-flex;
+      border-radius: 9999px;
+      height: 0.5rem;
+      width: 0.5rem;
+      background-color: #00c9ff;
+    }
+
+    @keyframes ping {
+      75%, 100% {
+        transform: scale(2);
+        opacity: 0;
+      }
+    }
+
+    .badge-text {
+      font-size: 0.7rem;
+      font-weight: 500;
+      color: #7df9ff;
+      letter-spacing: 0.05em;
+    }
+
+    .hero-title {
+      font-size: 2.5rem;
+      font-weight: 700;
+      letter-spacing: -0.025em;
+      line-height: 1.2;
+      max-width: 64rem;
+      margin: 0 auto;
+      background: linear-gradient(125deg, #FFFFFF, #7df9ff, #3a86ff);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+
+    @media (min-width: 768px) {
+      .hero-title {
+        font-size: 3.5rem;
+      }
+    }
+
+    .hero-description {
+      color: #cbd5e6;
+      font-size: 1rem;
+      max-width: 42rem;
+      margin: 1rem auto 0;
+      line-height: 1.5;
+    }
+
+    .highlight-box {
+      max-width: 56rem;
+      margin: 1.5rem auto 0;
+      padding: 1rem 1.5rem;
+      background: rgba(8, 18, 28, 0.65);
+      backdrop-filter: blur(16px);
+      border-radius: 1.5rem;
+      border: 1px solid rgba(0, 230, 230, 0.4);
+    }
+
+    .highlight-text {
+      color: #cbd5e6;
+      font-size: 0.9rem;
+      line-height: 1.5;
+    }
+
+    .highlight-bold {
+      color: white;
+      font-weight: 600;
+    }
+
+    /* Use Cases Section */
+    .use-cases-section {
+      padding: 3rem 1rem;
+      background: rgba(8, 18, 28, 0.4);
+      backdrop-filter: blur(16px);
+      border-radius: 2rem;
+      margin: 1.5rem 0;
+      border: 1px solid rgba(0, 230, 230, 0.2);
+    }
+
+    .section-header {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+
+    .section-badge {
+      display: inline-block;
+      padding: 0.25rem 0.8rem;
+      background: rgba(0, 201, 255, 0.15);
+      border-radius: 40px;
+      font-size: 0.7rem;
+      font-weight: 600;
+      color: #7df9ff;
+      margin-bottom: 0.8rem;
+    }
+
+    .use-cases-title {
+      font-size: 1.8rem;
+      font-weight: 700;
+      margin-bottom: 0.8rem;
+      line-height: 1.3;
+      background: linear-gradient(125deg, #FFFFFF, #7df9ff, #3a86ff);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+
+    @media (min-width: 768px) {
+      .use-cases-title {
+        font-size: 2.2rem;
+      }
+    }
+
+    .use-cases-subtitle {
+      color: #9ca3af;
+      font-size: 0.9rem;
+      max-width: 36rem;
+      margin: 0 auto;
+    }
+
+    /* Swiper Container */
+    .use-cases-swiper {
+      padding: 0.5rem 0.5rem 3rem !important;
+    }
+
+    /* Card Styling */
+    .use-case-card {
+      background: rgba(12, 22, 35, 0.65);
+      backdrop-filter: blur(12px);
+      border-radius: 1.2rem;
+      padding: 1.2rem 1rem;
+      text-align: center;
+      transition: all 0.35s ease;
+      border: 1px solid rgba(0, 255, 255, 0.2);
+      height: 100%;
+      cursor: pointer;
+    }
+
+    .use-case-card:hover {
+      transform: translateY(-5px);
+      border-color: cyan;
+      box-shadow: 0 15px 30px -12px rgba(0,255,255,0.2);
+    }
+
+    .card-glow {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, #00c9ff, #8b5cf6, #ec489a);
+      opacity: 0;
+      transition: opacity 0.4s;
+    }
+
+    .use-case-card:hover .card-glow {
+      opacity: 1;
+    }
+
+    .use-case-icon-wrapper {
+      position: relative;
+      width: 60px;
+      height: 60px;
+      margin: 0 auto 1rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .use-case-icon-bg {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, rgba(0, 201, 255, 0.2), rgba(94, 42, 255, 0.2));
+      border-radius: 1rem;
+      transform: rotate(45deg);
+      transition: all 0.4s;
+    }
+
+    .use-case-card:hover .use-case-icon-bg {
+      transform: rotate(0deg);
+    }
+
+    .use-case-icon {
+      position: relative;
+      z-index: 2;
+      font-size: 1.5rem;
+      color: #00c9ff;
+    }
+
+    .use-case-name {
+      font-size: 1rem;
+      font-weight: 600;
+      color: white;
+      margin-bottom: 0.5rem;
+    }
+
+    .use-case-description {
+      font-size: 0.75rem;
+      color: #9ca3af;
+      line-height: 1.4;
+      margin-bottom: 0.8rem;
+    }
+
+    .stat-badge {
+      display: inline-block;
+      padding: 0.2rem 0.6rem;
+      background: rgba(0, 201, 255, 0.15);
+      border-radius: 40px;
+      font-size: 0.6rem;
+      font-weight: 500;
+      color: #7df9ff;
+      border: 1px solid rgba(0, 201, 255, 0.3);
+    }
+
+    /* Navigation Buttons */
+    .swiper-button-next,
+    .swiper-button-prev {
+      color: #00c9ff;
+      background: rgba(0, 201, 255, 0.15);
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(0, 201, 255, 0.3);
+    }
+
+    .swiper-button-next:after,
+    .swiper-button-prev:after {
+      font-size: 1rem;
+    }
+
+    .swiper-pagination-bullet {
+      background: rgba(0, 201, 255, 0.4);
+    }
+
+    .swiper-pagination-bullet-active {
+      background: #00c9ff;
+      width: 20px;
+      border-radius: 5px;
+    }
+
+    /* Search Bar */
+    .search-section {
+      display: flex;
+      justify-content: center;
+      padding: 0 1rem;
+      margin: 1.5rem 0 2.5rem;
+    }
+
+    .search-container {
+      position: relative;
+      width: 100%;
+      max-width: 48rem;
+    }
+
+    .search-icon {
+      position: absolute;
+      inset-y: 0;
+      left: 1rem;
+      display: flex;
+      align-items: center;
+      pointer-events: none;
+    }
+
+    .search-icon svg {
+      width: 1rem;
+      height: 1rem;
+      color: #9ca3af;
+    }
+
+    .search-input {
+      width: 100%;
+      padding: 0.8rem 1rem 0.8rem 2.5rem;
+      border-radius: 50px;
+      background: rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(12px);
+      border: 1px solid #00c9ff;
+      color: white;
+      font-size: 0.9rem;
+      font-family: inherit;
+    }
+
+    .search-input:focus {
+      outline: none;
+      box-shadow: 0 0 12px rgba(0, 201, 255, 0.3);
+    }
+
+    .search-input::placeholder {
+      color: #9ca3af;
+    }
+
+    /* Features Grid */
+    .grid-3 {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 1rem;
+      padding: 1rem;
+    }
+
+    @media (min-width: 768px) {
+      .grid-3 {
+        grid-template-columns: repeat(3, 1fr);
+      }
+    }
+
+    .feature-card {
+      background: rgba(12, 22, 35, 0.65);
+      backdrop-filter: blur(12px);
+      border-radius: 1.2rem;
+      padding: 1.2rem;
+      border: 1px solid rgba(0, 255, 255, 0.2);
+      transition: all 0.3s ease;
+    }
+
+    .feature-card:hover {
+      transform: translateY(-5px);
+      border-color: cyan;
+    }
+
+    .feature-icon {
+      font-size: 2rem;
+      margin-bottom: 0.8rem;
+      color: #00c9ff;
+    }
+
+    .feature-title {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+      color: #7df9ff;
+    }
+
+    .feature-desc {
+      color: #cbd5e6;
+      font-size: 0.8rem;
+      line-height: 1.5;
+    }
+
+    /* News Section */
+    .news-section {
+      padding: 2rem 1rem;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .news-header {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+
+    .news-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.25rem 0.8rem;
+      background: rgba(0, 201, 255, 0.15);
+      border-radius: 40px;
+      font-size: 0.7rem;
+      color: #7df9ff;
+      margin-bottom: 0.8rem;
+    }
+
+    .news-title {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-bottom: 0.8rem;
+      background: linear-gradient(125deg, #FFFFFF, #7df9ff, #3a86ff);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+
+    @media (min-width: 768px) {
+      .news-title {
+        font-size: 2rem;
+      }
+    }
+
+    .news-subtitle {
+      color: #9ca3af;
+      font-size: 0.9rem;
+      max-width: 36rem;
+      margin: 0 auto;
+    }
+
+    .news-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+
+    @media (min-width: 768px) {
+      .news-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    @media (min-width: 1024px) {
+      .news-grid {
+        grid-template-columns: repeat(3, 1fr);
+      }
+    }
+
+    .news-card {
+      background: rgba(12, 22, 35, 0.65);
+      backdrop-filter: blur(12px);
+      border-radius: 1.2rem;
+      border: 1px solid rgba(0, 255, 255, 0.2);
+      overflow: hidden;
+      transition: all 0.3s ease;
+      cursor: pointer;
+    }
+
+    .news-card:hover {
+      transform: translateY(-5px);
+      border-color: cyan;
+    }
+
+    .news-card-inner {
+      padding: 1.2rem;
+    }
+
+    .news-category {
+      display: inline-block;
+      padding: 0.2rem 0.6rem;
+      background: rgba(0, 201, 255, 0.15);
+      border-radius: 40px;
+      font-size: 0.65rem;
+      font-weight: 600;
+      color: #7df9ff;
+      margin-bottom: 0.8rem;
+    }
+
+    .news-card-title {
+      font-size: 0.95rem;
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+      line-height: 1.4;
+      color: white;
+    }
+
+    .news-excerpt {
+      font-size: 0.75rem;
+      color: #cbd5e6;
+      line-height: 1.5;
+      margin-bottom: 0.8rem;
+    }
+
+    .news-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-top: 0.5rem;
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .news-time {
+      font-size: 0.65rem;
+      color: #6b7280;
+      display: flex;
+      align-items: center;
+      gap: 0.25rem;
+    }
+
+    .news-source {
+      font-size: 0.65rem;
+      color: #7df9ff;
+    }
+
+    .btn-refresh {
+      background: linear-gradient(95deg, #00c9ff, #5e2aff);
+      border: none;
+      padding: 0.6rem 1.2rem;
+      border-radius: 50px;
+      font-weight: bold;
+      color: white;
+      cursor: pointer;
+      font-size: 0.8rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .news-archive-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.6rem 1.2rem;
+      background: transparent;
+      border: 1px solid #00c9ff;
+      border-radius: 50px;
+      font-weight: bold;
+      color: #00c9ff;
+      text-decoration: none;
+      font-size: 0.8rem;
+    }
+
+    /* Footer */
+    footer {
+      text-align: center;
+      margin-top: 2rem;
+      opacity: 0.6;
+      font-size: 0.7rem;
+      padding: 1.5rem;
+      border-top: 1px solid rgba(0, 255, 255, 0.2);
+    }
+
+    .footer-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 1.5rem;
+      margin-bottom: 1.5rem;
+      text-align: left;
+    }
+
+    @media (min-width: 768px) {
+      .footer-grid {
+        grid-template-columns: repeat(4, 1fr);
+      }
+    }
+
+    .footer-logo {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .footer-logo-icon {
+      width: 1.5rem;
+      height: 1.5rem;
+      background: linear-gradient(135deg, #aaffff, #4d8eff);
+      border-radius: 0.4rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.7rem;
+    }
+
+    .footer-logo-text {
+      font-weight: 600;
+      background: linear-gradient(135deg, #aaffff, #4d8eff);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      font-size: 0.9rem;
+    }
+
+    .footer-description {
+      color: #6b7280;
+      font-size: 0.7rem;
+    }
+
+    .footer-title {
+      color: #7df9ff;
+      font-size: 0.8rem;
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+    }
+
+    .footer-links {
+      list-style: none;
+    }
+
+    .footer-link {
+      color: #939fbb;
+      font-size: 0.7rem;
+      cursor: pointer;
+      margin-bottom: 0.3rem;
+      transition: color 0.2s;
+    }
+
+    .footer-link:hover {
+      color: #7df9ff;
+    }
+
+    .footer-copyright {
+      text-align: center;
+      color: #909eb9;
+      font-size: 0.65rem;
+      padding-top: 1rem;
+      border-top: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    @media (max-width: 768px) {
+      .container {
+        padding: 1rem;
+      }
+      .navbar {
+        flex-direction: column;
+        gap: 0.8rem;
+        padding: 0.8rem;
+      }
+      .nav-right {
+        flex-wrap: wrap;
+        justify-content: center;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="bg-orb"></div>
+  <canvas id="neuralCanvas"></canvas>
+
+  <div class="container">
+    <!-- Navbar - Logo on left, links on right -->
+    <nav class="navbar" id="navbar">
+      <div class="logo">
+        <div class="logo-icon">U</div>
+        <span class="logo-text">UdyamVerse</span>
+      </div>
+      <div class="nav-right">
+        <div class="nav-links">
+          <a href="landing.html" class="nav-link active">Home</a>
+          <a href="product.html" class="nav-link">Product</a>
+          <a href="solutions.html" class="nav-link">Solutions</a>
+          <a href="resources.html" class="nav-link">Resources</a>
+        </div>
+        <a href="index.html" class="btn-primary">Get Started →</a>
+      </div>
+    </nav>
+
+    <!-- Breadcrumbs -->
+    <div class="breadcrumbs">
+      <nav class="breadcrumb-nav">
+        <ul class="breadcrumb-list">
+          <li class="breadcrumb-active">Home</li>
+          <li class="breadcrumb-separator">/</li>
+          <li class="breadcrumb-item"><a href="/explore">Explore Startups</a></li>
+          <li class="breadcrumb-separator">/</li>
+          <li class="breadcrumb-item"><a href="/investor">Investor Hub</a></li>
+        </ul>
+      </nav>
+    </div>
+
+    <!-- Hero Section -->
+    <section class="hero">
+      <div class="badge">
+        <span class="badge-dot">
+          <span class="badge-dot-ping"></span>
+          <span class="badge-dot-static"></span>
+        </span>
+        <span class="badge-text">AI-POWERED DECISION INTELLIGENCE</span>
+      </div>
+      <h1 class="hero-title">
+        All your startup decisions
+        <span class="gradient-text">connected in one platform</span>
+      </h1>
+      <p class="hero-description">
+        Build, analyze, and invest using AI-powered insights, real-time simulations, and structured intelligence.
+      </p>
+      <div class="highlight-box">
+        <p class="highlight-text">
+          Traditional decision-making tools are slowing down innovation in startups. Founders and investors, deeply connected to real-world challenges, are best positioned to leverage AI-powered systems for smarter outcomes.
+          <span class="highlight-bold"> Now, UdyamVerse enables you to scale that intelligence—turning ideas into data-driven success.</span>
+        </p>
+      </div>
+    </section>
+
+    <!-- Use Cases Section -->
+    <div class="use-cases-section">
+      <div class="section-header">
+        <span class="section-badge">AI-POWERED SOLUTIONS</span>
+        <h2 class="use-cases-title">Unrivaled AI, data, and intelligence <span>for every stakeholder</span></h2>
+        <p class="use-cases-subtitle">Transform your startup journey with our comprehensive suite of intelligent tools</p>
+      </div>
+      
+      <div class="use-cases-slider">
+        <div class="swiper use-cases-swiper">
+          <div class="swiper-wrapper">
+            <div class="swiper-slide">
+              <div class="use-case-card">
+                <div class="card-glow"></div>
+                <div class="use-case-icon-wrapper">
+                  <div class="use-case-icon-bg"></div>
+                  <div class="use-case-icon"><i class="fas fa-cubes"></i></div>
+                </div>
+                <div class="use-case-name">All Use Cases</div>
+                <div class="use-case-description">Complete AI-powered startup intelligence</div>
+                <div class="card-stats"><span class="stat-badge">10+ Features</span></div>
+              </div>
+            </div>
+            <div class="swiper-slide">
+              <div class="use-case-card">
+                <div class="card-glow"></div>
+                <div class="use-case-icon-wrapper">
+                  <div class="use-case-icon-bg"></div>
+                  <div class="use-case-icon"><i class="fas fa-chart-line"></i></div>
+                </div>
+                <div class="use-case-name">Market Intelligence</div>
+                <div class="use-case-description">Real-time market trends & analysis</div>
+                <div class="card-stats"><span class="stat-badge">94% Accuracy</span></div>
+              </div>
+            </div>
+            <div class="swiper-slide">
+              <div class="use-case-card">
+                <div class="card-glow"></div>
+                <div class="use-case-icon-wrapper">
+                  <div class="use-case-icon-bg"></div>
+                  <div class="use-case-icon"><i class="fas fa-search"></i></div>
+                </div>
+                <div class="use-case-name">Deal Sourcing</div>
+                <div class="use-case-description">AI-powered startup discovery</div>
+                <div class="card-stats"><span class="stat-badge">10K+ Startups</span></div>
+              </div>
+            </div>
+            <div class="swiper-slide">
+              <div class="use-case-card">
+                <div class="card-glow"></div>
+                <div class="use-case-icon-wrapper">
+                  <div class="use-case-icon-bg"></div>
+                  <div class="use-case-icon"><i class="fas fa-handshake"></i></div>
+                </div>
+                <div class="use-case-name">Deal Execution</div>
+                <div class="use-case-description">Streamlined due diligence tools</div>
+                <div class="card-stats"><span class="stat-badge">50% Faster</span></div>
+              </div>
+            </div>
+            <div class="swiper-slide">
+              <div class="use-case-card">
+                <div class="card-glow"></div>
+                <div class="use-case-icon-wrapper">
+                  <div class="use-case-icon-bg"></div>
+                  <div class="use-case-icon"><i class="fas fa-users"></i></div>
+                </div>
+                <div class="use-case-name">Networking</div>
+                <div class="use-case-description">Connect with founders & investors</div>
+                <div class="card-stats"><span class="stat-badge">500+ Partners</span></div>
+              </div>
+            </div>
+            <div class="swiper-slide">
+              <div class="use-case-card">
+                <div class="card-glow"></div>
+                <div class="use-case-icon-wrapper">
+                  <div class="use-case-icon-bg"></div>
+                  <div class="use-case-icon"><i class="fas fa-clipboard-check"></i></div>
+                </div>
+                <div class="use-case-name">Due Diligence</div>
+                <div class="use-case-description">AI-powered verification</div>
+                <div class="card-stats"><span class="stat-badge">99% Accuracy</span></div>
+              </div>
+            </div>
+          </div>
+          <div class="swiper-button-next"></div>
+          <div class="swiper-button-prev"></div>
+          <div class="swiper-pagination"></div>
+        </div>
+      </div>
+    </div>
+
+
+
+    <!-- Features Grid -->
+    <div class="grid-3">
+      <div class="feature-card">
+        <div class="feature-icon"><i class="fas fa-brain"></i></div>
+        <h3 class="feature-title">AI Startup Analysis</h3>
+        <p class="feature-desc">Evaluate ideas and predict success probability using advanced AI models.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon"><i class="fas fa-chart-line"></i></div>
+        <h3 class="feature-title">Simulation Engine</h3>
+        <p class="feature-desc">Run Monte Carlo simulations and stress-test growth scenarios.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon"><i class="fas fa-tachometer-alt"></i></div>
+        <h3 class="feature-title">Investor Dashboard</h3>
+        <p class="feature-desc">Track startups, analyze traction metrics, and make data-driven decisions.</p>
+      </div>
+    </div>
+
+    <!-- News Section -->
+    <div class="news-section">
+      <div class="news-header">
+        <div class="news-badge"><i class="fas fa-newspaper"></i> Latest Updates</div>
+        <h2 class="news-title">Stay informed with real-time startup news</h2>
+        <p class="news-subtitle">Get the latest insights, funding announcements, and market trends</p>
+      </div>
+      <div class="news-grid" id="newsGrid"></div>
+      <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
+        <button class="btn-refresh" onclick="refreshNews()"><i class="fas fa-sync-alt"></i> Refresh News</button>
+        <a href="#" class="news-archive-link">View all news <i class="fas fa-arrow-right"></i></a>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <footer>
+      <div class="footer-grid">
+        <div>
+          <div class="footer-logo">
+            <div class="footer-logo-icon">U</div>
+            <span class="footer-logo-text">UdyamVerse</span>
+          </div>
+          <p class="footer-description">AI-powered intelligence for the startup economy.</p>
+        </div>
+        <div>
+          <h4 class="footer-title">Platform</h4>
+          <ul class="footer-links">
+            <li class="footer-link">AI Analysis</li>
+            <li class="footer-link">Simulations</li>
+            <li class="footer-link">Investor Tools</li>
+          </ul>
+        </div>
+        <div>
+          <h4 class="footer-title">Resources</h4>
+          <ul class="footer-links">
+            <li class="footer-link">Documentation</li>
+            <li class="footer-link">API Status</li>
+            <li class="footer-link">Case Studies</li>
+          </ul>
+        </div>
+        <div>
+          <h4 class="footer-title">Legal</h4>
+          <ul class="footer-links">
+            <li class="footer-link">Privacy</li>
+            <li class="footer-link">Terms</li>
+            <li class="footer-link">Security</li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer-copyright">© 2025 UdyamVerse — Redefining startup intelligence.</div>
+    </footer>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
+  <script>
+    // Initialize Swiper
+    const swiper = new Swiper('.use-cases-swiper', {
+      slidesPerView: 'auto',
+      spaceBetween: 12,
+      navigation: {
+        nextEl: '.swiper-button-next',
+        prevEl: '.swiper-button-prev',
+      },
+      pagination: {
+        el: '.swiper-pagination',
+        clickable: true,
+      },
+      breakpoints: {
+        320: { slidesPerView: 1.2, spaceBetween: 12 },
+        480: { slidesPerView: 2.2, spaceBetween: 12 },
+        768: { slidesPerView: 3.2, spaceBetween: 12 },
+        1024: { slidesPerView: 4.2, spaceBetween: 12 },
+      }
+    });
+
+    // News Data
+    const newsData = [
+      { id: 1, category: "Funding", title: "AI Startup Raises $50M Series B", excerpt: "The company's platform uses machine learning to help businesses make data-driven decisions.", time: "2 hours ago", source: "TechCrunch", icon: "fas fa-chart-line" },
+      { id: 2, category: "Acquisition", title: "Global Tech Giant Acquires FinTech Startup for $1.2B", excerpt: "The acquisition marks a significant milestone in the fintech sector.", time: "5 hours ago", source: "Bloomberg", icon: "fas fa-building" },
+      { id: 3, category: "Market Trend", title: "VC Investment in AI Startups Surges 45%", excerpt: "New report shows unprecedented growth in AI investments.", time: "1 day ago", source: "VentureBeat", icon: "fas fa-chart-simple" }
+    ];
+
+    function renderNews() {
+      const grid = document.getElementById('newsGrid');
+      if (!grid) return;
+      grid.innerHTML = newsData.map(news => `
+        <div class="news-card" onclick="alert('Opening: ${news.title}')">
+          <div class="news-card-inner">
+            <span class="news-category"><i class="${news.icon}"></i> ${news.category}</span>
+            <h3 class="news-card-title">${news.title}</h3>
+            <p class="news-excerpt">${news.excerpt}</p>
+            <div class="news-footer">
+              <span class="news-time"><i class="fas fa-clock"></i> ${news.time}</span>
+              <span class="news-source">${news.source}</span>
+            </div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function refreshNews() {
+      const grid = document.getElementById('newsGrid');
+      grid.innerHTML = '<div class="news-card"><div class="news-card-inner" style="text-align:center;">Refreshing news...</div></div>';
+      setTimeout(() => { renderNews(); alert("News refreshed!"); }, 800);
+    }
+
+    // Neural Network Animation
+    const canvas = document.getElementById('neuralCanvas');
+    const ctx = canvas.getContext('2d');
+    let width = window.innerWidth, height = window.innerHeight;
+    let particles = [];
+
+    function resizeCanvas() {
+      width = window.innerWidth;
+      height = window.innerHeight;
+      canvas.width = width;
+      canvas.height = height;
+    }
+
+    class Particle {
+      constructor() {
+        this.x = Math.random() * width;
+        this.y = Math.random() * height;
+        this.vx = (Math.random() - 0.5) * 0.4;
+        this.vy = (Math.random() - 0.5) * 0.3;
+        this.radius = Math.random() * 2 + 1;
+        this.alpha = Math.random() * 0.5 + 0.2;
+      }
+      update() {
+        this.x += this.vx;
+        this.y += this.vy;
+        if (this.x < 0) this.x = width;
+        if (this.x > width) this.x = 0;
+        if (this.y < 0) this.y = height;
+        if (this.y > height) this.y = 0;
+      }
+      draw() {
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(80, 210, 255, ${this.alpha})`;
+        ctx.fill();
+      }
+    }
+
+    function initParticles() {
+      particles = [];
+      for (let i = 0; i < 80; i++) particles.push(new Particle());
+    }
+
+    function animate() {
+      if (!ctx) return;
+      ctx.clearRect(0, 0, width, height);
+      for (let p of particles) {
+        p.update();
+        p.draw();
+      }
+      for (let i = 0; i < particles.length; i++) {
+        for (let j = i + 1; j < particles.length; j++) {
+          const dx = particles[i].x - particles[j].x;
+          const dy = particles[i].y - particles[j].y;
+          const dist = Math.hypot(dx, dy);
+          if (dist < 100) {
+            ctx.beginPath();
+            ctx.moveTo(particles[i].x, particles[i].y);
+            ctx.lineTo(particles[j].x, particles[j].y);
+            ctx.strokeStyle = `rgba(0, 200, 255, ${0.1 * (1 - dist / 100)})`;
+            ctx.stroke();
+          }
+        }
+      }
+      requestAnimationFrame(animate);
+    }
+
+    window.addEventListener('resize', () => { resizeCanvas(); initParticles(); });
+    resizeCanvas();
+    initParticles();
+    animate();
+    renderNews();
+
+    // Navbar scroll effect
+    window.addEventListener('scroll', () => {
+      const navbar = document.getElementById('navbar');
+      if (window.scrollY > 50) navbar.classList.add('scrolled');
+      else navbar.classList.remove('scrolled');
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,746 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>UdyamVerse | AI-Powered Startup Intelligence Platform</title>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+  
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
+  
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: #05050f; font-family: 'Space Grotesk', sans-serif; overflow-x: hidden; color: #eef5ff; }
+    .bg-orb { position: fixed; width: 100vw; height: 100vh; top: 0; left: 0; z-index: -2; background: radial-gradient(circle at 20% 30%, #0a0a2a, #010105); }
+    .bg-orb::before { content: ""; position: absolute; width: 100%; height: 100%; background: radial-gradient(circle at 70% 60%, rgba(0, 255, 255, 0.08), transparent 60%); animation: pulseGlow 12s infinite alternate; }
+    @keyframes pulseGlow { 0% { opacity: 0.3; transform: scale(1);} 100% { opacity: 0.8; transform: scale(1.2);} }
+    canvas#particleCanvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; pointer-events: none; }
+    .dashboard { max-width: 1400px; margin: 0 auto; padding: 1.5rem 2rem 3rem; position: relative; z-index: 2; }
+    
+    /* Navigation Bar - IDENTICAL TO HOMEPAGE */
+    .nav-bar { 
+      display: flex; 
+      flex-wrap: wrap; 
+      justify-content: space-between; 
+      align-items: center; 
+      margin-bottom: 2.5rem; 
+      padding: 1rem 2rem; 
+      background: rgba(10, 20, 30, 0.55); 
+      backdrop-filter: blur(14px); 
+      border-radius: 70px; 
+      border: 1px solid rgba(0, 255, 255, 0.25); 
+      box-shadow: 0 20px 40px rgba(0,0,0,0.4), 0 0 20px rgba(0,255,255,0.1);
+      position: relative;
+      z-index: 100;
+    }
+    .logo { 
+      font-size: 1.6rem; 
+      font-weight: 700; 
+      background: linear-gradient(135deg, #aaffff, #4d8eff); 
+      -webkit-background-clip: text; 
+      background-clip: text; 
+      color: transparent; 
+      cursor: pointer; 
+    }
+    .logo i { background: none; color: #4dccff; margin-right: 8px; }
+    
+    /* Nav Links - same as homepage but without connection/notification */
+    .nav-links { 
+      display: flex; 
+      gap: 0.8rem; 
+      flex-wrap: wrap; 
+      align-items: center;
+    }
+    .nav-item { 
+      background: rgba(20, 30, 45, 0.6); 
+      backdrop-filter: blur(8px); 
+      padding: 0.6rem 1.5rem; 
+      border-radius: 40px; 
+      font-weight: 500; 
+      cursor: pointer; 
+      transition: all 0.3s; 
+      border: 1px solid rgba(80, 180, 255, 0.2);
+      white-space: nowrap;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: #eef5ff;
+    }
+    .nav-item i { margin-right: 6px; }
+    .nav-item:hover, .nav-item.active { 
+      background: linear-gradient(95deg, #0f2b3d, #0a1a2c); 
+      border-color: #3effea; 
+      box-shadow: 0 0 14px rgba(62, 255, 234, 0.4); 
+      transform: translateY(-3px); 
+    }
+    
+    /* Profile Dropdown Styles (matching homepage) */
+    .profile-dropdown {
+      position: relative;
+      display: inline-block;
+      margin-left: 0.5rem;
+    }
+    .profile-btn {
+      background: linear-gradient(135deg, rgba(0, 201, 255, 0.2), rgba(94, 42, 255, 0.2));
+      backdrop-filter: blur(8px);
+      padding: 0.6rem 1.2rem;
+      border-radius: 40px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.3s;
+      border: 1px solid rgba(80, 180, 255, 0.3);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      white-space: nowrap;
+    }
+    .profile-btn:hover {
+      background: linear-gradient(95deg, #0f2b3d, #0a1a2c);
+      border-color: #3effea;
+      box-shadow: 0 0 14px rgba(62, 255, 234, 0.4);
+      transform: translateY(-3px);
+    }
+    .dropdown-menu {
+      position: absolute;
+      top: calc(100% + 10px);
+      right: 0;
+      background: rgba(10, 20, 30, 0.98);
+      backdrop-filter: blur(16px);
+      border-radius: 20px;
+      border: 1px solid rgba(0, 255, 255, 0.3);
+      min-width: 260px;
+      overflow: hidden;
+      z-index: 1000;
+      opacity: 0;
+      visibility: hidden;
+      transform: translateY(-10px);
+      transition: all 0.3s ease;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+    }
+    .profile-dropdown.active .dropdown-menu {
+      opacity: 1;
+      visibility: visible;
+      transform: translateY(0);
+    }
+    .dropdown-header {
+      padding: 1rem;
+      border-bottom: 1px solid rgba(0, 255, 255, 0.2);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .dropdown-header img {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      object-fit: cover;
+    }
+    .dropdown-header-info h4 {
+      font-size: 0.9rem;
+      margin-bottom: 2px;
+    }
+    .dropdown-header-info p {
+      font-size: 0.7rem;
+      opacity: 0.7;
+    }
+    .dropdown-item {
+      padding: 0.75rem 1rem;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      cursor: pointer;
+      transition: all 0.2s;
+      border-left: 3px solid transparent;
+    }
+    .dropdown-item:hover {
+      background: rgba(0, 201, 255, 0.1);
+      border-left-color: #00c9ff;
+    }
+    .dropdown-item i {
+      width: 20px;
+      color: #00c9ff;
+    }
+    .dropdown-divider {
+      height: 1px;
+      background: rgba(0, 255, 255, 0.2);
+      margin: 0.5rem 0;
+    }
+    .dropdown-footer {
+      padding: 0.75rem 1rem;
+      border-top: 1px solid rgba(0, 255, 255, 0.2);
+      font-size: 0.7rem;
+      text-align: center;
+      opacity: 0.7;
+    }
+    
+    .hero-card { background: rgba(8, 18, 28, 0.65); backdrop-filter: blur(16px); border-radius: 2.5rem; padding: 2rem; margin-bottom: 2.5rem; border: 1px solid rgba(0, 230, 230, 0.4); box-shadow: 0 25px 45px -12px black; }
+    .glow-text { font-size: 2rem; font-weight: 700; background: linear-gradient(125deg, #FFFFFF, #7df9ff, #3a86ff); -webkit-background-clip: text; background-clip: text; color: transparent; margin-bottom: 1rem; }
+    .gen-btn { background: linear-gradient(95deg, #00c9ff, #5e2aff); border: none; padding: 0.8rem 2rem; border-radius: 60px; font-weight: bold; color: white; cursor: pointer; transition: 0.2s; font-family: inherit; }
+    .gen-btn:hover { transform: scale(1.02); box-shadow: 0 0 20px #00ddff; }
+    @media (max-width: 1000px) { .dashboard { padding: 1rem; } .glow-text { font-size: 1.5rem; } .nav-bar { flex-direction: column; gap: 1rem; } .nav-links { justify-content: center; } }
+    footer { text-align: center; margin-top: 3rem; opacity: 0.6; font-size: 0.8rem; }
+    
+    /* Planner Styles */
+    .questionnaire-step { animation: fadeIn 0.5s ease; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+    .question-card { background: rgba(0, 0, 0, 0.4); border-radius: 1rem; padding: 1.5rem; margin-bottom: 1rem; border-left: 4px solid #00c9ff; }
+    .options-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-top: 1rem; }
+    .option-btn { background: rgba(20, 30, 45, 0.8); border: 1px solid rgba(0, 255, 255, 0.3); padding: 1rem; border-radius: 1rem; cursor: pointer; transition: all 0.3s; text-align: center; color: #eef5ff; }
+    .option-btn:hover { background: rgba(0, 201, 255, 0.2); transform: translateY(-3px); border-color: #00c9ff; }
+    .option-btn.selected { background: linear-gradient(95deg, #00c9ff, #5e2aff); border-color: transparent; box-shadow: 0 0 15px rgba(0,201,255,0.5); }
+    .progress-bar { height: 6px; background: rgba(255,255,255,0.2); border-radius: 3px; margin-bottom: 2rem; overflow: hidden; }
+    .progress-fill { height: 100%; background: linear-gradient(90deg, #00c9ff, #5e2aff); width: 0%; transition: width 0.3s; border-radius: 3px; }
+    .plan-section { margin-bottom: 2rem; }
+    .plan-section h3 { color: #00c9ff; margin-bottom: 1rem; font-size: 1.4rem; border-bottom: 2px solid rgba(0,201,255,0.3); padding-bottom: 0.5rem; }
+    .plan-card { background: rgba(0, 0, 0, 0.3); border-radius: 1rem; padding: 1.2rem; margin-bottom: 1rem; border-left: 3px solid #00c9ff; }
+    .timeline-item { display: flex; margin-bottom: 1rem; padding: 1rem; background: rgba(0, 0, 0, 0.3); border-radius: 0.8rem; transition: all 0.3s; }
+    .timeline-item:hover { transform: translateX(5px); background: rgba(0, 201, 255, 0.1); }
+    .timeline-month { width: 100px; font-weight: bold; color: #00c9ff; }
+    .task-list { list-style: none; }
+    .task-list li { padding: 0.6rem 0; border-bottom: 1px solid rgba(255,255,255,0.1); display: flex; align-items: center; gap: 12px; }
+    .task-list li i { color: #00ffaa; width: 24px; }
+    .metric-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-top: 1rem; }
+    .metric-box { background: rgba(0, 0, 0, 0.4); padding: 1rem; border-radius: 0.8rem; text-align: center; }
+    .metric-number { font-size: 1.8rem; font-weight: bold; color: #00ffea; }
+    @media (max-width: 768px) { .timeline-item { flex-direction: column; } .timeline-month { margin-bottom: 0.5rem; } .metric-grid { grid-template-columns: 1fr; } }
+    textarea, input[type="text"] { background: rgba(0,0,0,0.6); border: 1px solid #00c9ff; border-radius: 1rem; padding: 1rem; color: white; font-family: inherit; width: 100%; margin-top: 1rem; }
+    textarea:focus, input:focus { outline: none; border-color: #ff00e0; box-shadow: 0 0 15px rgba(0,201,255,0.3); }
+    .btn-group { display: flex; gap: 1rem; justify-content: center; margin-top: 2rem; flex-wrap: wrap; }
+    .grid-2col { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; }
+    
+    /* Additional informative content cards */
+    .insight-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.8rem; margin-top: 1.5rem; }
+    .insight-card { background: rgba(0, 0, 0, 0.4); border-radius: 1.2rem; padding: 1.5rem; transition: all 0.3s; border: 1px solid rgba(0, 201, 255, 0.2); }
+    .insight-card:hover { transform: translateY(-5px); border-color: #00c9ff; }
+    .insight-card i { font-size: 2rem; color: #00c9ff; margin-bottom: 0.8rem; }
+    .insight-card h4 { font-size: 1.2rem; margin-bottom: 0.8rem; color: #7df9ff; }
+    .pill { background: rgba(0, 201, 255, 0.15); padding: 0.3rem 1rem; border-radius: 40px; font-size: 0.8rem; display: inline-block; }
+    
+    /* Modal for Profile Edit */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.85);
+      backdrop-filter: blur(8px);
+      z-index: 10000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+  </style>
+</head>
+<body>
+<div class="bg-orb"></div>
+<canvas id="particleCanvas"></canvas>
+
+<div class="dashboard">
+  <!-- Navigation Bar - Exactly like homepage (without connection/notification) -->
+  <div class="nav-bar">
+    <div class="logo" onclick="window.location.href='homepage.html'"><i class="fas fa-brain"></i> Udyam<span style="color:#7df9ff">Verse</span><span style="font-size:0.8rem;">.AI</span></div>
+    <div class="nav-links">
+      <div class="nav-item" data-link="homepage.html"><i class="fas fa-home"></i> Homepage</div>
+      <div class="nav-item active" data-link="planner.html"><i class="fas fa-calendar-alt"></i> Planner</div>
+      <div class="nav-item" data-link="post.html"><i class="fas fa-pen-fancy"></i> Post</div>
+      <div class="nav-item" data-link="stimulator.html"><i class="fas fa-chart-line"></i> Stimulator</div>
+      
+      <!-- Profile Dropdown Menu (identical to homepage) -->
+      <div class="profile-dropdown" id="profileDropdown">
+        <div class="profile-btn" id="profileBtn">
+          <i class="fas fa-user-circle"></i>
+          <span id="userNameDisplay">Loading...</span>
+          <i class="fas fa-chevron-down" style="font-size: 0.7rem;"></i>
+        </div>
+        <div class="dropdown-menu">
+          <div class="dropdown-header">
+            <img id="userAvatar" src="https://ui-avatars.com/api/?background=00c9ff&color=fff&name=User" alt="Avatar">
+            <div class="dropdown-header-info">
+              <h4 id="dropdownUserName">User</h4>
+              <p id="dropdownUserEmail">udyamverse@gmail.com</p>
+            </div>
+          </div>
+          <div class="dropdown-item" onclick="viewProfile()">
+            <i class="fas fa-user"></i>
+            <span>My Profile</span>
+          </div>
+          <div class="dropdown-item" onclick="editProfile()">
+            <i class="fas fa-edit"></i>
+            <span>Edit Profile</span>
+          </div>
+          <div class="dropdown-item" onclick="showSettings()">
+            <i class="fas fa-cog"></i>
+            <span>Settings</span>
+          </div>
+          <div class="dropdown-item" onclick="showNotifications()">
+            <i class="fas fa-bell"></i>
+            <span>Notifications</span>
+            <span style="margin-left: auto; background: #ff3366; padding: 2px 8px; border-radius: 20px; font-size: 0.7rem;" id="dropdownNotifBadge">0</span>
+          </div>
+          <div class="dropdown-item" onclick="showHelp()">
+            <i class="fas fa-question-circle"></i>
+            <span>Help & Support</span>
+          </div>
+          <div class="dropdown-divider"></div>
+          <div class="dropdown-item" onclick="signOut()">
+            <i class="fas fa-sign-out-alt"></i>
+            <span>Sign Out</span>
+          </div>
+          <div class="dropdown-footer">
+            <i class="fas fa-crown"></i> Premium Member
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PLANNER PAGE - COMPREHENSIVE STARTUP PLAN GENERATOR -->
+  <div class="hero-card">
+    <div class="glow-text"><i class="fas fa-calendar-alt"></i> AI Startup Plan Generator</div>
+    <p>Enter your raw idea, answer detailed questions, and receive a complete, actionable startup roadmap</p>
+    
+    <!-- Step 1: Raw Idea -->
+    <div id="stepIdea" class="questionnaire-step">
+      <div class="question-card">
+        <h3><i class="fas fa-lightbulb"></i> Step 1: Your Startup Idea</h3>
+        <textarea id="rawIdeaInput" rows="3" placeholder="Describe your startup idea in detail... (e.g., An AI-powered platform that helps farmers optimize crop yield using satellite imagery and weather data)"></textarea>
+        <button class="gen-btn" style="margin-top:1rem;" onclick="startQuestionnaire()"><i class="fas fa-arrow-right"></i> Continue to Detailed Questionnaire</button>
+      </div>
+    </div>
+    
+    <!-- Step 2: Questionnaire -->
+    <div id="stepQuestions" style="display:none;">
+      <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+      <div id="questionContainer"></div>
+      <div style="display: flex; gap: 1rem; justify-content: space-between; margin-top: 1rem;">
+        <button class="gen-btn" id="prevBtn" onclick="prevQuestion()" style="display:none;"><i class="fas fa-chevron-left"></i> Previous</button>
+        <button class="gen-btn" id="nextBtn" onclick="nextQuestion()">Next <i class="fas fa-chevron-right"></i></button>
+        <button class="gen-btn" id="generatePlanBtnPlanner" onclick="generateStartupPlan()" style="display:none; background: linear-gradient(95deg, #00ffaa, #00c9ff);"><i class="fas fa-magic"></i> Generate Complete Plan</button>
+      </div>
+    </div>
+    
+    <!-- Step 3: Complete Plan -->
+    <div id="stepPlan" style="display:none;">
+      <div id="startupPlan"></div>
+      <div class="btn-group">
+        <button class="gen-btn" onclick="resetPlanner()"><i class="fas fa-plus"></i> Create New Plan</button>
+        <button class="gen-btn" onclick="downloadPlan()"><i class="fas fa-download"></i> Download Plan (Text)</button>
+        <button class="gen-btn" onclick="window.print()"><i class="fas fa-print"></i> Print Plan</button>
+        <button class="gen-btn" onclick="window.location.href='homepage.html'"><i class="fas fa-home"></i> Return to Dashboard</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ADDITIONAL INFORMATIVE CONTENT BELOW PLAN GENERATOR -->
+  <div class="hero-card">
+    <div class="glow-text-small"><i class="fas fa-chalkboard-teacher"></i> Founder Intelligence Insights</div>
+    <p>Actionable resources, success metrics, and expert-backed strategies to supercharge your startup journey</p>
+    
+    <div class="insight-grid">
+      <div class="insight-card">
+        <i class="fas fa-chart-pie"></i>
+        <h4>Startup Success Factors</h4>
+        <p>Data-driven analysis of 10,000+ startups reveals top predictors: <strong>team execution (38%)</strong>, market timing (24%), and product uniqueness (19%).</p>
+        <span class="pill">Research 2025</span>
+      </div>
+      <div class="insight-card">
+        <i class="fas fa-hand-holding-usd"></i>
+        <h4>Funding Trends 2025</h4>
+        <p>AI & climate tech lead with 42% YoY growth. Early-stage median check size: $2.8M. Top VCs prioritize founder-market fit and scalable unit economics.</p>
+        <span class="pill">Investor Intel</span>
+      </div>
+      <div class="insight-card">
+        <i class="fas fa-brain"></i>
+        <h4>AI-Powered Growth Hacks</h4>
+        <p>Implement LLM-driven customer support automation → reduce churn by 18%. Predictive analytics for inventory: 23% cost reduction observed in D2C brands.</p>
+        <span class="pill">Actionable AI</span>
+      </div>
+      <div class="insight-card">
+        <i class="fas fa-users"></i>
+        <h4>Founder Mindset</h4>
+        <p>Weekly resilience rituals: 87% of unicorn founders practice structured reflection. Avoid decision fatigue with 3-priority daily rule.</p>
+        <span class="pill">Mental Edge</span>
+      </div>
+    </div>
+
+    <div style="margin-top: 2rem; background: linear-gradient(135deg, rgba(0,201,255,0.1), rgba(94,42,255,0.1)); border-radius: 1.5rem; padding: 1.5rem;">
+      <h3 style="color: #00c9ff;"><i class="fas fa-chart-line"></i> Market Intelligence Snapshot</h3>
+      <div class="grid-2col" style="margin-top: 1rem;">
+        <div><i class="fas fa-chart-simple"></i> <strong>Top Growing Sectors:</strong> Generative AI Infrastructure (↑214%), Climate Tech (↑156%), Bio-manufacturing (↑98%)</div>
+        <div><i class="fas fa-chart-line"></i> <strong>Investor Appetite:</strong> 73% of VCs plan to increase early-stage deployment in 2025</div>
+        <div><i class="fas fa-clock"></i> <strong>Time to Series A:</strong> Average 18 months with $1.2M ARR threshold</div>
+        <div><i class="fas fa-chart-pie"></i> <strong>Exit Multiples:</strong> AI startups acquired at 12.4x ARR vs 6.2x for SaaS (median)</div>
+      </div>
+      <div class="pill" style="margin-top: 1rem;">Real-time data · Updated weekly</div>
+    </div>
+  </div>
+
+  <footer>⚡ AI Venture Capital Intelligence · Predictive Failure Model · NLP Pitch Evaluator · Real-time Market Data</footer>
+</div>
+
+<script>
+  // ========================
+  // Firebase Configuration
+  // ========================
+  const firebaseConfig = {
+    apiKey: "AIzaSyD0ekRSOYjLFLnsIBanetGCUzKAonbpZGw",
+    authDomain: "udayamverse.firebaseapp.com",
+    databaseURL: "https://udayamverse-default-rtdb.asia-southeast1.firebasedatabase.app",
+    projectId: "udayamverse",
+    storageBucket: "udayamverse.firebasestorage.app",
+    messagingSenderId: "119963956254",
+    appId: "1:119963956254:web:68de80a73d6aeb4bf5ea0f",
+    measurementId: "G-L6E1MC1CJC"
+  };
+
+  // Initialize Firebase
+  firebase.initializeApp(firebaseConfig);
+  const auth = firebase.auth();
+  const database = firebase.database();
+
+  // ========================
+  // User Profile Data
+  // ========================
+  let userProfile = {
+    name: "Founder User",
+    email: "udyamverse@gmail.com",
+    avatar: "https://ui-avatars.com/api/?background=00c9ff&color=fff&name=Founder"
+  };
+  
+  let currentUser = null;
+
+  // ========================
+  // Load User Profile from Firebase
+  // ========================
+  async function loadUserProfile(userId) {
+    try {
+      const userRef = database.ref('users/' + userId);
+      const snapshot = await userRef.once('value');
+      const userData = snapshot.val();
+      
+      if (userData) {
+        currentUser = {
+          uid: userId,
+          email: userData.email,
+          name: userData.name || userData.fullName || 'User',
+          avatar: (userData.name || userData.fullName || 'U').charAt(0).toUpperCase(),
+          userType: userData.userType || 'founder',
+          startupName: userData.startupName || '',
+          firm: userData.firm || ''
+        };
+        
+        userProfile = {
+          name: currentUser.name,
+          email: currentUser.email,
+          avatar: `https://ui-avatars.com/api/?background=00c9ff&color=fff&name=${encodeURIComponent(currentUser.name)}`
+        };
+        localStorage.setItem('userProfile', JSON.stringify(userProfile));
+        updateProfileDisplay();
+      }
+    } catch (error) {
+      console.error("Error loading user profile:", error);
+    }
+  }
+  
+  function updateProfileDisplay() {
+    const displayName = userProfile.name.split(' ')[0];
+    const userNameSpan = document.getElementById('userNameDisplay');
+    if (userNameSpan) userNameSpan.innerText = displayName;
+    
+    const dropdownUserName = document.getElementById('dropdownUserName');
+    if (dropdownUserName) dropdownUserName.innerText = userProfile.name;
+    
+    const dropdownUserEmail = document.getElementById('dropdownUserEmail');
+    if (dropdownUserEmail) dropdownUserEmail.innerText = userProfile.email;
+    
+    const avatarImg = document.getElementById('userAvatar');
+    if (avatarImg) avatarImg.src = userProfile.avatar;
+  }
+  
+  // ========================
+  // Firebase Auth State Listener
+  // ========================
+  auth.onAuthStateChanged(async (user) => {
+    if (user) {
+      currentUser = user;
+      await loadUserProfile(user.uid);
+    } else {
+      // No user logged in, redirect to login page
+      window.location.href = 'index.html';
+    }
+  });
+  
+  // ========== FUNCTION TO OPEN STIMULATOR ON PORT 5001 ==========
+  function openStimulator(event) {
+    window.open('http://localhost:5001', '_blank');
+  }
+
+  // ========== PROFILE DROPDOWN FUNCTIONS (with Firebase) ==========
+  // Profile Dropdown Toggle
+  const profileDropdown = document.getElementById('profileDropdown');
+  const profileBtn = document.getElementById('profileBtn');
+  if (profileBtn && profileDropdown) {
+    profileBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      profileDropdown.classList.toggle('active');
+    });
+    document.addEventListener('click', (e) => {
+      if (!profileDropdown.contains(e.target)) {
+        profileDropdown.classList.remove('active');
+      }
+    });
+  }
+
+  window.viewProfile = function() {
+    alert(`👤 Profile Information\n\nName: ${userProfile.name}\nEmail: ${userProfile.email}\n\nPremium Member since 2024`);
+    if(profileDropdown) profileDropdown.classList.remove('active');
+  };
+  
+  window.editProfile = function() {
+    const modal = document.createElement('div');
+    modal.className = 'modal-overlay';
+    modal.innerHTML = `
+      <div style="position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); background:rgba(10,20,30,0.98); border-radius:2rem; max-width:450px; width:90%; z-index:10001; border:1px solid #00c9ff;">
+        <div style="display:flex; justify-content:space-between; padding:1rem; border-bottom:1px solid rgba(0,201,255,0.3);">
+          <h3><i class="fas fa-user-edit"></i> Edit Profile</h3>
+          <button onclick="this.closest('.modal-overlay').remove()" style="background:#ff4444; border:none; color:white; border-radius:50%; width:32px; height:32px; cursor:pointer;">✕</button>
+        </div>
+        <div style="padding:1.5rem;">
+          <input type="text" id="editName" placeholder="Full Name" value="${userProfile.name}" style="width:100%; padding:0.8rem; margin-bottom:1rem; background:rgba(0,0,0,0.6); border:1px solid #00c9ff; border-radius:10px; color:white;">
+          <input type="email" id="editEmail" placeholder="Email Address" value="${userProfile.email}" style="width:100%; padding:0.8rem; margin-bottom:1rem; background:rgba(0,0,0,0.6); border:1px solid #00c9ff; border-radius:10px; color:white;">
+          <button class="gen-btn" style="width:100%;" onclick="saveProfileFromModal()">Save Changes</button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(modal);
+    if(profileDropdown) profileDropdown.classList.remove('active');
+  };
+  
+  window.saveProfileFromModal = async function() {
+    const newName = document.getElementById('editName').value;
+    const newEmail = document.getElementById('editEmail').value;
+    if (newName && newEmail && currentUser) {
+      try {
+        await database.ref('users/' + currentUser.uid).update({
+          name: newName,
+          email: newEmail
+        });
+        userProfile.name = newName;
+        userProfile.email = newEmail;
+        userProfile.avatar = `https://ui-avatars.com/api/?background=00c9ff&color=fff&name=${encodeURIComponent(newName)}`;
+        localStorage.setItem('userProfile', JSON.stringify(userProfile));
+        updateProfileDisplay();
+        document.querySelector('.modal-overlay').remove();
+        alert('Profile updated successfully!');
+      } catch (error) {
+        alert('Error updating profile: ' + error.message);
+      }
+    } else {
+      alert('Please fill in all fields');
+    }
+  };
+  
+  window.showSettings = function() { 
+    alert(`⚙️ Settings\n\n• Theme: Dark Mode\n• Notifications: Enabled\n• Language: English\n• Data Sync: Auto\n\nMore settings coming soon!`); 
+    if(profileDropdown) profileDropdown.classList.remove('active'); 
+  };
+  
+  window.showNotifications = function() { 
+    alert(`🔔 Notifications (3)\n\n1. Your startup analysis is ready\n2. New investor match found\n3. Weekly market report available`); 
+    if(profileDropdown) profileDropdown.classList.remove('active'); 
+  };
+  
+  window.showHelp = function() { 
+    alert(`❓ Help & Support\n\n📧 Email: udyamverse@gmail.com\n💬 Live Chat: Click the chat button\n📚 Documentation: Available in dashboard\n\nWe're here to help 24/7!`); 
+    if(profileDropdown) profileDropdown.classList.remove('active'); 
+  };
+  
+  window.signOut = function() { 
+    if (confirm('Are you sure you want to sign out?')) {
+      auth.signOut().then(() => {
+        localStorage.removeItem('userProfile');
+        localStorage.removeItem('isLoggedIn');
+        window.location.href = 'index.html';
+      }).catch((error) => {
+        console.error('Sign out error:', error);
+        alert('Error signing out. Please try again.');
+      });
+    }
+    if(profileDropdown) profileDropdown.classList.remove('active'); 
+  };
+
+  // Navigation: when clicking nav items, redirect to respective html pages
+  document.querySelectorAll('.nav-item[data-link]').forEach(item => {
+    item.addEventListener('click', function(e) {
+      const link = this.getAttribute('data-link');
+      if (link) {
+        if (link === 'stimulator.html') {
+          window.open('http://localhost:5001', '_blank');
+        } else {
+          window.location.href = link;
+        }
+      }
+    });
+  });
+
+  // ========== PARTICLE ANIMATION ==========
+  const canvas = document.getElementById('particleCanvas');
+  const ctx = canvas.getContext('2d');
+  let width = window.innerWidth, height = window.innerHeight;
+  let particles = [];
+  const PARTICLE_COUNT = 100;
+  function resizeCanvas() { width = window.innerWidth; height = window.innerHeight; canvas.width = width; canvas.height = height; }
+  class Particle { constructor() { this.x = Math.random() * width; this.y = Math.random() * height; this.vx = (Math.random() - 0.5) * 0.4; this.vy = (Math.random() - 0.5) * 0.3; this.radius = Math.random() * 2 + 1.2; this.alpha = Math.random() * 0.5 + 0.2; } update() { this.x += this.vx; this.y += this.vy; if (this.x < 0) this.x = width; if (this.x > width) this.x = 0; if (this.y < 0) this.y = height; if (this.y > height) this.y = 0; } draw() { ctx.beginPath(); ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2); ctx.fillStyle = `rgba(80, 210, 255, ${this.alpha})`; ctx.fill(); } }
+  function initParticles() { particles = []; for (let i = 0; i < PARTICLE_COUNT; i++) particles.push(new Particle()); }
+  function animateParticles() { if(!ctx) return; ctx.clearRect(0, 0, width, height); for (let p of particles) { p.update(); p.draw(); } for (let i = 0; i < particles.length; i++) { for (let j = i+1; j < particles.length; j++) { const dx = particles[i].x - particles[j].x, dy = particles[i].y - particles[j].y, dist = Math.hypot(dx, dy); if (dist < 120) { ctx.beginPath(); ctx.moveTo(particles[i].x, particles[i].y); ctx.lineTo(particles[j].x, particles[j].y); ctx.strokeStyle = `rgba(0, 200, 255, ${0.15 * (1 - dist/120)})`; ctx.stroke(); } } } requestAnimationFrame(animateParticles); }
+  resizeCanvas(); initParticles(); animateParticles();
+  window.addEventListener('resize', () => { resizeCanvas(); initParticles(); });
+
+  // ========== PLANNER LOGIC (unchanged core functions) ==========
+  const questions = [
+    { id: "industry", text: "What industry does your startup operate in?", options: ["Technology/SaaS", "Healthcare/Biotech", "Fintech", "E-commerce/Retail", "Education/EdTech", "Real Estate/PropTech", "Food/AgTech", "Transportation/Mobility", "Entertainment/Media", "Other"] },
+    { id: "targetAudience", text: "Who is your primary target audience?", options: ["B2B (Businesses)", "B2C (Consumers)", "B2B2C (Both)", "Enterprise (Large Companies)", "SMB (Small & Medium Businesses)", "Government/Public Sector", "Non-Profit Organizations"] },
+    { id: "problem", text: "What specific problem does your startup solve?", options: ["Saves time and increases efficiency", "Saves money and reduces costs", "Increases revenue/profits", "Improves quality of life/health", "Provides entertainment/engagement", "Solves a critical unmet need", "Automates manual processes"] },
+    { id: "businessModel", text: "What's your primary revenue model?", options: ["Subscription (SaaS/Recurring)", "Transaction/Marketplace Fee", "Advertising/Sponsorship", "Freemium with Premium Features", "One-time Purchase", "Licensing/IP Royalties", "Hardware/Physical Product", "Data Monetization", "Consulting/Services"] },
+    { id: "stage", text: "What stage is your startup currently at?", options: ["Idea/Concept Only", "Validating with Customer Interviews", "Building MVP/Prototype", "Launched with Early Users", "Generating Revenue", "Seeking Seed Funding", "Scaling/Growth Stage", "Profitable & Expanding"] },
+    { id: "funding", text: "What's your funding strategy?", options: ["Bootstrapping (Self-funded)", "Friends & Family", "Angel Investors", "Venture Capital (VC)", "Crowdfunding (Kickstarter/Indiegogo)", "Government Grants", "Bank Loans", "Corporate Investment", "Revenue-Based Financing"] },
+    { id: "team", text: "What's your current team size?", options: ["Solo Founder", "2-3 Co-founders", "Small Team (4-10)", "Growing Team (11-50)", "Large Team (50+)", "Looking for Co-founder", "Hiring Currently"] },
+    { id: "marketing", text: "How do you plan to acquire customers?", options: ["Content Marketing (Blog/SEO)", "Social Media Marketing", "Paid Advertising (Google/Facebook)", "Referral Programs", "Partnerships & Affiliates", "Sales Team/Outbound", "PR & Media Coverage", "Community Building", "Influencer Marketing"] },
+    { id: "challenges", text: "What's your biggest current challenge?", options: ["Product Development/Technical", "Customer Acquisition/Marketing", "Team Building/Hiring", "Funding/Capital", "Competition/Market Saturation", "Scaling/Operations", "Legal/Regulatory", "Product-Market Fit"] },
+    { id: "competitiveAdvantage", text: "What's your unique competitive advantage?", options: ["Superior Technology/IP", "Better User Experience", "Lower Cost Structure", "Strong Brand/Network Effects", "Exclusive Partnerships", "First Mover Advantage", "Data/AI Advantage", "Exceptional Customer Support"] },
+    { id: "timeline", text: "What's your target timeline to launch?", options: ["Within 1 month", "Within 3 months", "Within 6 months", "Within 1 year", "Already Launched", "Flexible/Research Phase"] },
+    { id: "exitStrategy", text: "What's your long-term vision?", options: ["Build a sustainable independent company", "Acquisition by larger company", "IPO/Public Listing", "Merge with competitor", "Franchise/Expand globally", "Not sure yet"] }
+  ];
+  
+  let currentQuestionIndex = 0;
+  let answers = {};
+  let rawIdea = "";
+  
+  window.startQuestionnaire = function() {
+    rawIdea = document.getElementById('rawIdeaInput').value.trim();
+    if(!rawIdea) { alert("Please enter your startup idea first!"); return; }
+    document.getElementById('stepIdea').style.display = 'none';
+    document.getElementById('stepQuestions').style.display = 'block';
+    answers = {};
+    currentQuestionIndex = 0;
+    showQuestion();
+  };
+  
+  function showQuestion() {
+    const container = document.getElementById('questionContainer');
+    const q = questions[currentQuestionIndex];
+    let optionsHtml = '<div class="options-grid">';
+    q.options.forEach(opt => {
+      const isSelected = answers[q.id] === opt;
+      optionsHtml += `<div class="option-btn ${isSelected ? 'selected' : ''}" onclick="selectOption('${q.id}', '${opt.replace(/'/g, "\\'")}')">${opt}</div>`;
+    });
+    optionsHtml += '</div>';
+    container.innerHTML = `
+      <div class="question-card">
+        <h3>${currentQuestionIndex + 1}. ${q.text}</h3>
+        ${optionsHtml}
+      </div>
+    `;
+    updateProgress();
+    updateButtons();
+  }
+  
+  window.selectOption = function(questionId, value) {
+    answers[questionId] = value;
+    const btns = document.querySelectorAll('.option-btn');
+    btns.forEach(btn => {
+      if(btn.innerText === value) btn.classList.add('selected');
+      else btn.classList.remove('selected');
+    });
+    setTimeout(() => { nextQuestion(); }, 300);
+  };
+  
+  window.nextQuestion = function() {
+    const currentQ = questions[currentQuestionIndex];
+    if(!answers[currentQ.id]) { alert("Please select an option before continuing!"); return; }
+    if(currentQuestionIndex < questions.length - 1) {
+      currentQuestionIndex++;
+      showQuestion();
+    } else {
+      document.getElementById('nextBtn').style.display = 'none';
+      document.getElementById('generatePlanBtnPlanner').style.display = 'inline-block';
+    }
+  };
+  
+  window.prevQuestion = function() {
+    if(currentQuestionIndex > 0) {
+      currentQuestionIndex--;
+      showQuestion();
+      document.getElementById('nextBtn').style.display = 'inline-block';
+      document.getElementById('generatePlanBtnPlanner').style.display = 'none';
+    }
+  };
+  
+  function updateProgress() {
+    const progress = ((currentQuestionIndex + 1) / questions.length) * 100;
+    document.getElementById('progressFill').style.width = progress + '%';
+  }
+  
+  function updateButtons() {
+    document.getElementById('prevBtn').style.display = currentQuestionIndex > 0 ? 'inline-block' : 'none';
+    if(currentQuestionIndex === questions.length - 1 && answers[questions[currentQuestionIndex].id]) {
+      document.getElementById('nextBtn').style.display = 'none';
+      document.getElementById('generatePlanBtnPlanner').style.display = 'inline-block';
+    } else {
+      document.getElementById('nextBtn').style.display = 'inline-block';
+      document.getElementById('generatePlanBtnPlanner').style.display = 'none';
+    }
+  }
+  
+  window.generateStartupPlan = function() {
+    const plan = generateComprehensivePlan();
+    document.getElementById('stepQuestions').style.display = 'none';
+    document.getElementById('stepPlan').style.display = 'block';
+    document.getElementById('startupPlan').innerHTML = plan;
+    gsap.fromTo("#startupPlan", { opacity:0, y:30 }, { duration:0.8, opacity:1, y:0 });
+  };
+  
+  function generateComprehensivePlan() {
+    const a = answers;
+    const successScore = Math.floor(Math.random() * 30 + 60);
+    return `
+      <div class="plan-section"><h3><i class="fas fa-rocket"></i> Executive Summary</h3><div class="plan-card"><p><strong>✨ Your Vision:</strong> ${escapeHtml(rawIdea)}</p><div class="metric-grid"><div class="metric-box"><div class="metric-number">${successScore}%</div><div>Success Probability</div></div><div class="metric-box"><div class="metric-number">${a.industry || "—"}</div><div>Industry</div></div><div class="metric-box"><div class="metric-number">${a.stage || "—"}</div><div>Current Stage</div></div></div></div></div>
+      <div class="plan-section"><h3><i class="fas fa-question-circle"></i> Problem & Solution</h3><div class="plan-card"><p><strong>🎯 Problem Statement:</strong> ${a.problem || "—"} - Your target audience (${a.targetAudience || "—"}) faces this challenge daily.</p><p><strong>💡 Your Solution:</strong> A ${a.industry || "technology"} platform that delivers ${a.problem === "Saves time" ? "time savings" : a.problem === "Saves money" ? "cost reduction" : "value"} through innovative technology.</p><p><strong>🏆 Unique Value Proposition:</strong> Unlike competitors, you offer ${a.competitiveAdvantage || "superior technology"} that makes your solution ${a.competitiveAdvantage === "Lower Cost Structure" ? "more affordable" : "more effective"}.</p></div></div>
+      <div class="plan-section"><h3><i class="fas fa-calendar-week"></i> 90-Day Launch Plan</h3><div class="timeline-item"><div class="timeline-month"><i class="fas fa-rocket"></i> Days 1-30:</div><div><strong>Foundation & Validation</strong><br>• Conduct 50+ customer discovery interviews<br>• Create landing page with waitlist signup<br>• Define MVP feature set</div></div><div class="timeline-item"><div class="timeline-month"><i class="fas fa-code"></i> Days 31-60:</div><div><strong>MVP Development</strong><br>• Build functional prototype<br>• Onboard 10-20 beta testers<br>• Start content marketing</div></div><div class="timeline-item"><div class="timeline-month"><i class="fas fa-chart-line"></i> Days 61-90:</div><div><strong>Launch & Scale</strong><br>• Official public launch<br>• Target: 100+ users in first month<br>• Track key metrics</div></div></div>
+      <div class="plan-section"><h3><i class="fas fa-chart-line"></i> Financial Projections</h3><div class="plan-card"><div class="metric-grid"><div class="metric-box"><div class="metric-number">${a.businessModel || "Subscription"}</div><div>Revenue Model</div></div><div class="metric-box"><div class="metric-number">${a.funding || "Bootstrapping"}</div><div>Funding Strategy</div></div><div class="metric-box"><div class="metric-number">12-18 months</div><div>Break-even Timeline</div></div></div><h4 style="margin-top:1rem;">📊 Revenue Projections:</h4><ul class="task-list"><li><i class="fas fa-dollar-sign"></i> <strong>Month 3:</strong> $5,000 - $10,000 MRR</li><li><i class="fas fa-dollar-sign"></i> <strong>Month 6:</strong> $25,000 - $50,000 MRR</li><li><i class="fas fa-dollar-sign"></i> <strong>Month 12:</strong> $100,000 - $200,000 MRR</li></ul></div></div>
+    `;
+  }
+  
+  window.resetPlanner = function() {
+    document.getElementById('stepPlan').style.display = 'none';
+    document.getElementById('stepIdea').style.display = 'block';
+    document.getElementById('rawIdeaInput').value = '';
+    answers = {};
+    currentQuestionIndex = 0;
+  };
+  window.downloadPlan = function() {
+    const planContent = document.getElementById('startupPlan').innerText;
+    const blob = new Blob([`AI UdyamVerse STARTUP PLAN\n\n${planContent}`], { type: 'text/plain' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = 'startup_plan.txt';
+    link.click();
+  };
+  function escapeHtml(text) { if(!text) return "—"; return text.replace(/[&<>]/g, function(m){if(m==='&') return '&amp;'; if(m==='<') return '&lt;'; if(m==='>') return '&gt;'; return m;}); }
+  
+  // Load profile from localStorage initially
+  const savedProfile = localStorage.getItem('userProfile');
+  if (savedProfile) {
+    userProfile = JSON.parse(savedProfile);
+    updateProfileDisplay();
+  }
+</script>
+</body>
+</html>
